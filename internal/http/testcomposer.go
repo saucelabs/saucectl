@@ -35,7 +35,7 @@ type FrameworkResponse struct {
 	Platforms   []struct {
 		Name            string            `json:"name"`
 		Browsers        []string          `json:"browsers"`
-		BrowserDefaults map[string]string `json:"browserDefaults,omitempty"`
+		BrowserDefaults map[string]string `json:"browserDefaults,omitempty"` //TODO: Checking if this works out for maintaining multiple browser versions for the same playwright version
 	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
 	Runtimes        []string          `json:"runtimes"`
@@ -183,7 +183,7 @@ func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]fr
 			platforms = append(platforms, framework.Platform{
 				PlatformName:    p.Name,
 				BrowserNames:    p.Browsers,
-				BrowserDefaults: p.BrowserDefaults,
+				BrowserDefaults: p.BrowserDefaults, //TODO: Checking if this works out for maintaining multiple browser versions for the same playwright version
 			})
 		}
 		frameworks = append(frameworks, framework.Metadata{

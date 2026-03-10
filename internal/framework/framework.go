@@ -47,7 +47,7 @@ func (m *Metadata) IsFlaggedForRemoval() bool {
 type Platform struct {
 	PlatformName    string
 	BrowserNames    []string
-	BrowserDefaults map[string]string
+	BrowserDefaults map[string]string //TODO: Checking if this works out for maintaining multiple browser versions for the same playwright version
 }
 
 // HasPlatform returns true if the provided Metadata has a matching platform.
