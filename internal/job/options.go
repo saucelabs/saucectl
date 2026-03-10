@@ -76,18 +76,18 @@ type StartOptions struct {
 
 	// RDC only.
 
-	AppSettings       AppSettings `json:"appSettings,omitempty"`
-	DeviceID          string      `json:"deviceId,omitempty"`
-	DeviceHasCarrier  bool        `json:"deviceHasCarrier,omitempty"`
-	DevicePrivateOnly bool        `json:"devicePrivateOnly,omitempty"`
-	DeviceType        string      `json:"deviceType,omitempty"`
+	AppSettings       AppSettings        `json:"appSettings,omitempty"`
+	DeviceID          string             `json:"deviceId,omitempty"`
+	DeviceHasCarrier  bool               `json:"deviceHasCarrier,omitempty"`
+	DevicePrivateOnly bool               `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string             `json:"deviceType,omitempty"`
 	NetworkProfile    string             `json:"networkProfile,omitempty"`
-	NetworkConditions *NetworkConditions  `json:"networkConditions,omitempty"`
-	RealDevice        bool        `json:"realDevice,omitempty"`
-	TestsToRun        []string    `json:"testsToRun,omitempty"`
-	TestsToSkip       []string    `json:"testsToSkip,omitempty"`
-	RealDeviceKind    string      `json:"realDeviceKind,omitempty"`
-	XCTestRunFile     string      `json:"xcTestRunFile,omitempty"`
+	NetworkConditions *NetworkConditions `json:"networkConditions,omitempty"`
+	RealDevice        bool               `json:"realDevice,omitempty"`
+	TestsToRun        []string           `json:"testsToRun,omitempty"`
+	TestsToSkip       []string           `json:"testsToSkip,omitempty"`
+	RealDeviceKind    string             `json:"realDeviceKind,omitempty"`
+	XCTestRunFile     string             `json:"xcTestRunFile,omitempty"`
 
 	// VMD specific settings.
 
