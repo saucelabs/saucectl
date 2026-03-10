@@ -45,8 +45,9 @@ func (m *Metadata) IsFlaggedForRemoval() bool {
 
 // Platform represent a supported platform.
 type Platform struct {
-	PlatformName string
-	BrowserNames []string
+	PlatformName    string
+	BrowserNames    []string
+	BrowserDefaults map[string]string
 }
 
 // HasPlatform returns true if the provided Metadata has a matching platform.

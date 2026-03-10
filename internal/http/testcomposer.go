@@ -32,9 +32,10 @@ type FrameworkResponse struct {
 	EOLDate     time.Time `json:"eolDate"`
 	RemovalDate time.Time `json:"removalDate"`
 	Runner      runner    `json:"runner"`
-	Platforms   []struct {
-		Name     string
-		Browsers []string
+	Platforms []struct {
+		Name            string            `json:"name"`
+		Browsers        []string          `json:"browsers"`
+		BrowserDefaults map[string]string `json:"browserDefaults,omitempty"`
 	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
 	Runtimes        []string          `json:"runtimes"`
@@ -180,8 +181,9 @@ func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]fr
 		var platforms []framework.Platform
 		for _, p := range f.Platforms {
 			platforms = append(platforms, framework.Platform{
-				PlatformName: p.Name,
-				BrowserNames: p.Browsers,
+				PlatformName:    p.Name,
+				BrowserNames:    p.Browsers,
+				BrowserDefaults: p.BrowserDefaults,
 			})
 		}
 		frameworks = append(frameworks, framework.Metadata{
