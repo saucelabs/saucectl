@@ -58,25 +58,25 @@ type rdcJob struct {
 
 // RDCSessionRequest represents the RDC session request.
 type RDCSessionRequest struct {
-	TestFramework       string            `json:"test_framework,omitempty"`
-	AppID               string            `json:"app_id,omitempty"`
-	TestAppID           string            `json:"test_app_id,omitempty"`
-	XCTestRunFileID     string            `json:"xc_test_run_file,omitempty"`
-	OtherApps           []string          `json:"other_apps,omitempty"`
-	DeviceQuery         DeviceQuery       `json:"device_query,omitempty"`
-	TestOptions         map[string]string `json:"test_options,omitempty"`
-	TestsToRun          []string          `json:"tests_to_run,omitempty"`
-	TestsToSkip         []string          `json:"tests_to_skip,omitempty"`
-	TestName            string            `json:"test_name,omitempty"`
-	TunnelName          string            `json:"tunnel_name,omitempty"`
-	TunnelOwner         string            `json:"tunnel_owner,omitempty"`
-	UseTestOrchestrator bool              `json:"use_test_orchestrator,omitempty"`
-	Tags                []string          `json:"tags,omitempty"`
-	Build               string            `json:"build,omitempty"`
+	TestFramework       string                 `json:"test_framework,omitempty"`
+	AppID               string                 `json:"app_id,omitempty"`
+	TestAppID           string                 `json:"test_app_id,omitempty"`
+	XCTestRunFileID     string                 `json:"xc_test_run_file,omitempty"`
+	OtherApps           []string               `json:"other_apps,omitempty"`
+	DeviceQuery         DeviceQuery            `json:"device_query,omitempty"`
+	TestOptions         map[string]string      `json:"test_options,omitempty"`
+	TestsToRun          []string               `json:"tests_to_run,omitempty"`
+	TestsToSkip         []string               `json:"tests_to_skip,omitempty"`
+	TestName            string                 `json:"test_name,omitempty"`
+	TunnelName          string                 `json:"tunnel_name,omitempty"`
+	TunnelOwner         string                 `json:"tunnel_owner,omitempty"`
+	UseTestOrchestrator bool                   `json:"use_test_orchestrator,omitempty"`
+	Tags                []string               `json:"tags,omitempty"`
+	Build               string                 `json:"build,omitempty"`
 	AppSettings         job.AppSettings        `json:"settings_overwrite,omitempty"`
 	RealDeviceKind      string                 `json:"kind,omitempty"`
 	NetworkProfile      string                 `json:"network_profile,omitempty"`
-	NetworkConditions   *job.NetworkConditions  `json:"network_conditions,omitempty"`
+	NetworkConditions   *job.NetworkConditions `json:"network_conditions,omitempty"`
 }
 
 // DeviceQuery represents the device selection query for RDC.

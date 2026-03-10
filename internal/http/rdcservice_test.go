@@ -743,11 +743,11 @@ func TestRDCService_StartJob(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				jobStarterPayload: job.StartOptions{
-					User:      "fake-user",
-					AccessKey: "fake-access-key",
-					Name:      "fake-test-name",
-					Framework: "espresso",
-					Build:     "fake-buildname",
+					User:           "fake-user",
+					AccessKey:      "fake-access-key",
+					Name:           "fake-test-name",
+					Framework:      "espresso",
+					Build:          "fake-buildname",
 					NetworkProfile: "3G-slow",
 					NetworkConditions: &job.NetworkConditions{
 						DownloadSpeed: intPtr(500),

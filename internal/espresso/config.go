@@ -59,16 +59,16 @@ type ShardConfig struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name               string                 `yaml:"name,omitempty" json:"name"`
-	TestApp            string                 `yaml:"testApp,omitempty" json:"testApp"`
-	TestAppDescription string                 `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
-	Devices            []config.Device        `yaml:"devices,omitempty" json:"devices"`
-	Emulators          []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
-	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
-	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
+	Name               string                    `yaml:"name,omitempty" json:"name"`
+	TestApp            string                    `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription string                    `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	Devices            []config.Device           `yaml:"devices,omitempty" json:"devices"`
+	Emulators          []config.Emulator         `yaml:"emulators,omitempty" json:"emulators"`
+	TestOptions        map[string]interface{}    `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout            time.Duration             `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings        `yaml:"appSettings,omitempty" json:"appSettings"`
 	NetworkProfile     string                    `yaml:"networkProfile,omitempty" json:"networkProfile,omitempty"`
-	NetworkConditions  *config.NetworkConditions  `yaml:"networkConditions,omitempty" json:"networkConditions,omitempty"`
+	NetworkConditions  *config.NetworkConditions `yaml:"networkConditions,omitempty" json:"networkConditions,omitempty"`
 	PassThreshold      int                       `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry         `yaml:"smartRetry,omitempty" json:"-"`
 }
