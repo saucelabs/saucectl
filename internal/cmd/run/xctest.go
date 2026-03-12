@@ -79,6 +79,9 @@ func NewXCTestCmd() *cobra.Command {
 	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Overwrite app settings for real device to intercept biometric authentication.")
 	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Overwrite app settings for real device to enable group directory access.")
 
+	// Network throttling
+	sc.String("networkProfile", "suite::networkProfile", "", "Predefined network profile for throttling (e.g. 3G-slow, 4G-fast).")
+
 	return cmd
 }
 
