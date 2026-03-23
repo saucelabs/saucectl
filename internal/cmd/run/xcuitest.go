@@ -83,7 +83,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Configure app settings for real device to enable group directory access.")
 
 	// Network throttling
-	sc.String("networkProfile", "suite::networkProfile", "", "Predefined network profile for throttling (e.g. 3G-slow, 4G-fast).")
+	sc.String("networkProfile", "suite::networkProfile", "", "Predefined network profile for throttling (e.g. 3G-slow, 4G-fast). See https://docs.saucelabs.com/mobile-apps/features/network-throttling/")
 
 	return cmd
 }

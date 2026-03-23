@@ -100,7 +100,10 @@ type StartOptions struct {
 	CLIFlags       map[string]interface{} `json:"-"`
 }
 
-// NetworkConditions represents custom network throttling conditions for real device testing.
+// NetworkConditions represents custom network throttling conditions for the RDC API
+// request payload (JSON snake_case). This mirrors config.NetworkConditions which uses
+// YAML camelCase tags for user-facing configuration files.
+// See: https://docs.saucelabs.com/mobile-apps/features/network-throttling/
 type NetworkConditions struct {
 	DownloadSpeed *int `json:"download_speed,omitempty"`
 	UploadSpeed   *int `json:"upload_speed,omitempty"`

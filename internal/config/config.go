@@ -227,6 +227,7 @@ type Instrumentation struct {
 }
 
 // NetworkConditions represents custom network throttling conditions for real device testing.
+// See: https://docs.saucelabs.com/mobile-apps/features/network-throttling/
 type NetworkConditions struct {
 	DownloadSpeed *int `yaml:"downloadSpeed,omitempty" json:"download_speed,omitempty"`
 	UploadSpeed   *int `yaml:"uploadSpeed,omitempty" json:"upload_speed,omitempty"`

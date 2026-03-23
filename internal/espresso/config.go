@@ -214,6 +214,9 @@ func Validate(p Project) error {
 		if p.Sauce.Retries < suite.PassThreshold-1 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
+		if suite.NetworkProfile != "" && suite.NetworkConditions != nil {
+			log.Warn().Str("suite", suite.Name).Msg("Both networkProfile and networkConditions are set. networkConditions will take precedence.")
+		}
 		config.ValidateSmartRetry(suite.SmartRetry)
 		if v, ok := suite.TestOptions["numShards"]; ok {
 			_, err := strconv.Atoi(fmt.Sprintf("%v", v))

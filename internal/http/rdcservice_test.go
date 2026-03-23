@@ -764,7 +764,37 @@ func TestRDCService_StartJob(t *testing.T) {
 				URL:    "/tests/fake-job-id",
 			},
 			wantErr: nil,
-			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				defer r.Body.Close()
+
+				var req RDCSessionRequest
+				if err := json.Unmarshal(body, &req); err != nil {
+					w.WriteHeader(500)
+					return
+				}
+
+				if req.NetworkProfile != "3G-slow" {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte(fmt.Sprintf("expected network_profile '3G-slow', got '%s'", req.NetworkProfile)))
+					return
+				}
+				if req.NetworkConditions == nil {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte("expected network_conditions to be set"))
+					return
+				}
+				if *req.NetworkConditions.DownloadSpeed != 500 || *req.NetworkConditions.UploadSpeed != 250 ||
+					*req.NetworkConditions.Latency != 200 || *req.NetworkConditions.Loss != 1 {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte("network_conditions values do not match"))
+					return
+				}
+
 				w.WriteHeader(201)
 				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
 			},
