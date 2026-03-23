@@ -76,16 +76,18 @@ type StartOptions struct {
 
 	// RDC only.
 
-	AppSettings       AppSettings `json:"appSettings,omitempty"`
-	DeviceID          string      `json:"deviceId,omitempty"`
-	DeviceHasCarrier  bool        `json:"deviceHasCarrier,omitempty"`
-	DevicePrivateOnly bool        `json:"devicePrivateOnly,omitempty"`
-	DeviceType        string      `json:"deviceType,omitempty"`
-	RealDevice        bool        `json:"realDevice,omitempty"`
-	TestsToRun        []string    `json:"testsToRun,omitempty"`
-	TestsToSkip       []string    `json:"testsToSkip,omitempty"`
-	RealDeviceKind    string      `json:"realDeviceKind,omitempty"`
-	XCTestRunFile     string      `json:"xcTestRunFile,omitempty"`
+	AppSettings       AppSettings        `json:"appSettings,omitempty"`
+	DeviceID          string             `json:"deviceId,omitempty"`
+	DeviceHasCarrier  bool               `json:"deviceHasCarrier,omitempty"`
+	DevicePrivateOnly bool               `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string             `json:"deviceType,omitempty"`
+	NetworkProfile    string             `json:"networkProfile,omitempty"`
+	NetworkConditions *NetworkConditions `json:"networkConditions,omitempty"`
+	RealDevice        bool               `json:"realDevice,omitempty"`
+	TestsToRun        []string           `json:"testsToRun,omitempty"`
+	TestsToSkip       []string           `json:"testsToSkip,omitempty"`
+	RealDeviceKind    string             `json:"realDeviceKind,omitempty"`
+	XCTestRunFile     string             `json:"xcTestRunFile,omitempty"`
 
 	// VMD specific settings.
 
@@ -96,6 +98,14 @@ type StartOptions struct {
 
 	ConfigFilePath string                 `json:"-"`
 	CLIFlags       map[string]interface{} `json:"-"`
+}
+
+// NetworkConditions represents custom network throttling conditions for real device testing.
+type NetworkConditions struct {
+	DownloadSpeed *int `json:"download_speed,omitempty"`
+	UploadSpeed   *int `json:"upload_speed,omitempty"`
+	Latency       *int `json:"latency,omitempty"`
+	Loss          *int `json:"loss,omitempty"`
 }
 
 // AppSettings represents mobile app settings.
