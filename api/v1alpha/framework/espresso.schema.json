@@ -323,6 +323,33 @@
           },
           "smartRetry": {
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
+          },
+          "networkProfile": {
+            "description": "Predefined network profile for throttling (e.g. 2G, 3G, 4G, offline).",
+            "type": "string"
+          },
+          "networkConditions": {
+            "description": "Custom network throttling conditions for real device testing.",
+            "type": "object",
+            "properties": {
+              "downloadSpeed": {
+                "description": "Download speed in kbps.",
+                "type": "integer"
+              },
+              "uploadSpeed": {
+                "description": "Upload speed in kbps.",
+                "type": "integer"
+              },
+              "latency": {
+                "description": "Latency in ms.",
+                "type": "integer"
+              },
+              "loss": {
+                "description": "Packet loss percentage (0-100).",
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "anyOf": [
