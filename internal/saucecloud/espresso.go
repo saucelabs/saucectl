@@ -284,14 +284,3 @@ func (r *EspressoRunner) newStartOptions(
 	}
 }
 
-func configToJobNetworkConditions(nc *config.NetworkConditions) *job.NetworkConditions {
-	if nc == nil {
-		return nil
-	}
-	return &job.NetworkConditions{
-		DownloadSpeed: nc.DownloadSpeed,
-		UploadSpeed:   nc.UploadSpeed,
-		Latency:       nc.Latency,
-		Loss:          nc.Loss,
-	}
-}

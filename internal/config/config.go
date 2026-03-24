@@ -587,6 +587,14 @@ func ValidateSmartRetry(smartRetry SmartRetry) {
 	}
 }
 
+// ValidateNetworkThrottling warns when both networkProfile and networkConditions are set
+// on the same suite. networkConditions takes precedence.
+func ValidateNetworkThrottling(suiteName, networkProfile string, networkConditions *NetworkConditions) {
+	if networkProfile != "" && networkConditions != nil {
+		log.Warn().Str("suite", suiteName).Msg("Both networkProfile and networkConditions are set. networkConditions will take precedence.")
+	}
+}
+
 func ValidateRegistries(registries []Registry) error {
 	noScopeRegistry := 0
 	for idx, rg := range registries {

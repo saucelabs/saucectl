@@ -263,9 +263,7 @@ func Validate(p Project) error {
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
-		if suite.NetworkProfile != "" && suite.NetworkConditions != nil {
-			log.Warn().Str("suite", suite.Name).Msg("Both networkProfile and networkConditions are set. networkConditions will take precedence.")
-		}
+		config.ValidateNetworkThrottling(suite.Name, suite.NetworkProfile, suite.NetworkConditions)
 		if p.Sauce.Retries < suite.PassThreshold-1 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
