@@ -295,6 +295,33 @@
           "testListFile": {
             "description": "This file containing tests will be used in sharding by concurrency.",
             "type": "string"
+          },
+          "networkProfile": {
+            "description": "Predefined network profile for throttling (e.g. 2G, 3G, 4G, offline). See https://docs.saucelabs.com/mobile-apps/features/network-throttling/",
+            "type": "string"
+          },
+          "networkConditions": {
+            "description": "Custom network throttling conditions for real device testing. See https://docs.saucelabs.com/mobile-apps/features/network-throttling/",
+            "type": "object",
+            "properties": {
+              "downloadSpeed": {
+                "description": "Download speed in kbps.",
+                "type": "integer"
+              },
+              "uploadSpeed": {
+                "description": "Upload speed in kbps.",
+                "type": "integer"
+              },
+              "latency": {
+                "description": "Latency in ms.",
+                "type": "integer"
+              },
+              "loss": {
+                "description": "Packet loss percentage (0-100).",
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "anyOf": [

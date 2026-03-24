@@ -739,6 +739,67 @@ func TestRDCService_StartJob(t *testing.T) {
 			},
 		},
 		{
+			name: "Happy path with network throttling",
+			args: args{
+				ctx: context.Background(),
+				jobStarterPayload: job.StartOptions{
+					User:           "fake-user",
+					AccessKey:      "fake-access-key",
+					Name:           "fake-test-name",
+					Framework:      "espresso",
+					Build:          "fake-buildname",
+					NetworkProfile: "3G-slow",
+					NetworkConditions: &job.NetworkConditions{
+						DownloadSpeed: intPtr(500),
+						UploadSpeed:   intPtr(250),
+						Latency:       intPtr(200),
+						Loss:          intPtr(1),
+					},
+				},
+			},
+			want: job.Job{
+				ID:     "fake-job-id",
+				Status: job.StateQueued,
+				IsRDC:  true,
+				URL:    "/tests/fake-job-id",
+			},
+			wantErr: nil,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				defer r.Body.Close()
+
+				var req RDCSessionRequest
+				if err := json.Unmarshal(body, &req); err != nil {
+					w.WriteHeader(500)
+					return
+				}
+
+				if req.NetworkProfile != "3G-slow" {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte(fmt.Sprintf("expected network_profile '3G-slow', got '%s'", req.NetworkProfile)))
+					return
+				}
+				if req.NetworkConditions == nil {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte("expected network_conditions to be set"))
+					return
+				}
+				if *req.NetworkConditions.DownloadSpeed != 500 || *req.NetworkConditions.UploadSpeed != 250 ||
+					*req.NetworkConditions.Latency != 200 || *req.NetworkConditions.Loss != 1 {
+					w.WriteHeader(500)
+					_, _ = w.Write([]byte("network_conditions values do not match"))
+					return
+				}
+
+				w.WriteHeader(201)
+				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
+			},
+		},
+		{
 			name: "Non 2xx status code",
 			args: args{
 				ctx:               context.Background(),
@@ -871,4 +932,8 @@ func TestRDCService_GetDevice(t *testing.T) {
 			}
 		})
 	}
+}
+
+func intPtr(v int) *int {
+	return &v
 }

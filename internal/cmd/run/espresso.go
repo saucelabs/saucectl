@@ -84,6 +84,9 @@ func NewEspressoCmd() *cobra.Command {
 	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Configure app settings for real device to capture network.")
 	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Configure app settings for real device to intercept biometric authentication.")
 
+	// Network throttling
+	sc.String("networkProfile", "suite::networkProfile", "", "Predefined network profile for throttling (e.g. 3G-slow, 4G-fast). See https://docs.saucelabs.com/mobile-apps/features/network-throttling/")
+
 	return cmd
 }
 

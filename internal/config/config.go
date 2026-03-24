@@ -226,6 +226,15 @@ type Instrumentation struct {
 	NetworkCapture              *bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
 }
 
+// NetworkConditions represents custom network throttling conditions for real device testing.
+// See: https://docs.saucelabs.com/mobile-apps/features/network-throttling/
+type NetworkConditions struct {
+	DownloadSpeed *int `yaml:"downloadSpeed,omitempty" json:"download_speed,omitempty"`
+	UploadSpeed   *int `yaml:"uploadSpeed,omitempty" json:"upload_speed,omitempty"`
+	Latency       *int `yaml:"latency,omitempty" json:"latency,omitempty"`
+	Loss          *int `yaml:"loss,omitempty" json:"loss,omitempty"`
+}
+
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
 	FailedOnly bool `yaml:"failedOnly" json:"-"`
@@ -575,6 +584,14 @@ func toStringKeys(val interface{}) (interface{}, error) {
 func ValidateSmartRetry(smartRetry SmartRetry) {
 	if smartRetry.FailedClassesOnly {
 		log.Warn().Msg("failedClassesOnly has been deprecated. Use FailedOnly instead.")
+	}
+}
+
+// ValidateNetworkThrottling warns when both networkProfile and networkConditions are set
+// on the same suite. networkConditions takes precedence.
+func ValidateNetworkThrottling(suiteName, networkProfile string, networkConditions *NetworkConditions) {
+	if networkProfile != "" && networkConditions != nil {
+		log.Warn().Str("suite", suiteName).Msg("Both networkProfile and networkConditions are set. networkConditions will take precedence.")
 	}
 }
 

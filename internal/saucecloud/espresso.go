@@ -245,6 +245,10 @@ func (r *EspressoRunner) newStartOptions(
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
 
+		// Network throttling
+		NetworkProfile:    s.NetworkProfile,
+		NetworkConditions: configToJobNetworkConditions(s.NetworkConditions),
+
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
 		DeviceHasCarrier:  d.hasCarrier,

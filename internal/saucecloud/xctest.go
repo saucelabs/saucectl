@@ -197,6 +197,10 @@ func (r *XctestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, xcTe
 		},
 		TestOptions: s.TestOptions.ToMap(),
 
+		// Network throttling
+		NetworkProfile:    s.NetworkProfile,
+		NetworkConditions: configToJobNetworkConditions(s.NetworkConditions),
+
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
 		DeviceHasCarrier:  d.hasCarrier,

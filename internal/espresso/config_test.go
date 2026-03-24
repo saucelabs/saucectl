@@ -247,6 +247,59 @@ suites:
 	}
 }
 
+func TestFromFile_NetworkThrottling(t *testing.T) {
+	dir := fs.NewDir(t, "espresso-cfg",
+		fs.WithFile("config.yml", `
+apiVersion: v1alpha
+kind: espresso
+espresso:
+  app: ./tests/apps/mda-1.0.17-20.apk
+  testApp: ./tests/apps/mda-androidTest-1.0.17-20.apk
+suites:
+  - name: "network throttle test"
+    networkProfile: "3G-slow"
+    devices:
+      - name: "Device name"
+        platformVersion: 8.1
+  - name: "custom conditions test"
+    networkConditions:
+      downloadSpeed: 5000
+      uploadSpeed: 2000
+      latency: 100
+      loss: 5
+    devices:
+      - name: "Device name"
+        platformVersion: 8.1
+`, fs.WithMode(0655)))
+	defer dir.Remove()
+
+	cfg, err := FromFile(filepath.Join(dir.Path(), "config.yml"))
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+
+	assert.Equal(t, "3G-slow", cfg.Suites[0].NetworkProfile)
+	assert.Nil(t, cfg.Suites[0].NetworkConditions)
+
+	assert.Equal(t, "", cfg.Suites[1].NetworkProfile)
+	assert.NotNil(t, cfg.Suites[1].NetworkConditions)
+
+	dl := 5000
+	ul := 2000
+	lat := 100
+	loss := 5
+	expected := &config.NetworkConditions{
+		DownloadSpeed: &dl,
+		UploadSpeed:   &ul,
+		Latency:       &lat,
+		Loss:          &loss,
+	}
+	diff := cmp.Diff(expected, cfg.Suites[1].NetworkConditions)
+	if diff != "" {
+		t.Errorf("NetworkConditions mismatch: %s", diff)
+	}
+}
+
 func TestSetDefaults_TestApp(t *testing.T) {
 	testCase := []struct {
 		name      string
