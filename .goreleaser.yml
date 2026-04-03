@@ -44,6 +44,30 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
+# DEPRECATED: This brews section publishes a Homebrew Formula so that existing
+# `brew install saucelabs/saucectl/saucectl` users receive an update that tells
+# them to switch to the Cask.  Once adoption has moved over, this section can be
+# removed entirely.
+brews:
+  - ids:
+      - saucectl-darwin
+      - saucectl-other
+    name: saucectl
+    description: "Test orchestration with Sauce Labs (DEPRECATED: use 'brew install --cask saucectl' instead)"
+    caveats: |
+      This formula is deprecated. Please use the cask instead:
+        brew uninstall saucectl
+        brew install --cask saucectl
+    repository:
+      owner: saucelabs
+      name: homebrew-saucectl
+    directory: Formula
+    homepage: "https://saucelabs.com/"
+    license: "Apache-2.0"
+    commit_author:
+      name: devx-sauce-bot
+      email: devx.bot@saucelabs.com
+    commit_msg_template: "Formula update for {{ .ProjectName }} version {{ .Tag }}"
 homebrew_casks:
   - name: saucectl
     # Only use macOS archives for the cask
