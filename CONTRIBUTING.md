@@ -124,7 +124,8 @@ If you are having trouble getting into the mood of idiomatic Go, we recommend re
 `saucectl` uses [GoReleaser](https://goreleaser.com/) to create releases. Everything that is required to do is to push a new tag upstream. A GitHub Actions [pipeline](https://github.com/saucelabs/saucectl-internal/actions?query=workflow%3A%22saucectl+release%22) is then triggered that runs GoReleaser with the right parameters. Before creating a new tag, check out the [latest releases](https://github.com/saucelabs/saucectl-internal/releases) and follow [semantic versioning](https://semver.org/).
 
 A release will automatically trigger:
-- an update to the [Homebrew Formulae](https://github.com/saucelabs/homebrew-saucectl)
+- signing and notarization of macOS binaries via Quill
+- an update to the [Homebrew Cask](https://github.com/saucelabs/homebrew-saucectl)
 - a new release of [node-saucectl](https://github.com/saucelabs/node-saucectl)
 
 Double check that these updates have happened.
