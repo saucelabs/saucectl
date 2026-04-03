@@ -73,6 +73,8 @@ homebrew_casks:
     # Only use macOS archives for the cask
     ids:
       - saucectl-darwin
+    url:
+      verified: "github.com/saucelabs/saucectl"
     repository:
       owner: saucelabs
       name: homebrew-saucectl
