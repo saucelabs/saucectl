@@ -6,39 +6,105 @@ before:
     - go mod download
     - go generate ./...
 builds:
-  - 
+  # macOS builds (used for Homebrew Cask)
+  - id: saucectl-darwin
     main: ./cmd/saucectl/saucectl.go
+    binary: saucectl
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    hooks:
+      post:
+        - cmd: quill sign-and-notarize "{{ .Path }}"
+    ldflags:
+      - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
+      - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
+      - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
+  # Linux and Windows builds
+  - id: saucectl-other
+    main: ./cmd/saucectl/saucectl.go
+    binary: saucectl
     env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
-      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - "386"
+    ignore:
+      - goos: windows
+        goarch: arm64
     ldflags:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
-    ignore:
-      - goos: windows
-        goarch: arm64
+# DEPRECATED: This brews section publishes a Homebrew Formula so that existing
+# `brew install saucelabs/saucectl/saucectl` users receive an update that tells
+# them to switch to the Cask.  Once adoption has moved over, this section can be
+# removed entirely.
 brews:
-  - repository:
+  - ids:
+      - saucectl-darwin
+      - saucectl-other
+    name: saucectl
+    description: "Test orchestration with Sauce Labs (DEPRECATED: use 'brew install --cask saucectl' instead)"
+    caveats: |
+      This formula is deprecated. Please use the cask instead:
+        brew uninstall saucectl
+        brew install --cask saucectl
+    repository:
       owner: saucelabs
       name: homebrew-saucectl
     directory: Formula
-    test: |
-      system "#{bin}/goreleaser", "-v"
-    name: saucectl
     homepage: "https://saucelabs.com/"
-    description: "Test orchestration with Sauce Labs"
+    license: "Apache-2.0"
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
+    commit_msg_template: "Formula update for {{ .ProjectName }} version {{ .Tag }}"
+homebrew_casks:
+  - name: saucectl
+    # Only use macOS archives for the cask
+    ids:
+      - saucectl-darwin
+    url:
+      verified: "github.com/saucelabs/saucectl"
+    repository:
+      owner: saucelabs
+      name: homebrew-saucectl
+    directory: Casks
+    homepage: "https://saucelabs.com/"
+    description: "Test orchestration with Sauce Labs"
+    binaries:
+      - saucectl
+    commit_author:
+      name: devx-sauce-bot
+      email: devx.bot@saucelabs.com
+    commit_msg_template: "Cask update for {{ .ProjectName }} version {{ .Tag }}"
 archives:
-  - name_template: >-
+  # macOS archives (for Homebrew Cask)
+  - id: saucectl-darwin
+    ids:
+      - saucectl-darwin
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_mac_
+      {{- if eq .Arch "amd64" }}64-bit
+      {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - LICENSE
+  # Linux and Windows archives
+  - id: saucectl-other
+    ids:
+      - saucectl-other
+    name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
-      {{- if eq .Os "darwin"}}mac_
-      {{- else if eq .Os "linux" }}linux_
+      {{- if eq .Os "linux" }}linux_
       {{- else if eq .Os "windows" }}win_
       {{- else }}{{ .Os }}_{{ end }}
       {{- if eq .Arch "amd64" }}64-bit
