@@ -245,6 +245,94 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
+			name: "XCUITest: VDC retries only failed tests when JUnit has failures + SmartRetry",
+			init: init{
+				JobService: &mocks.FakeJobService{
+					GetJobAssetFileContentFn: func(_ context.Context, jobID, fileName string) ([]byte, error) {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
+							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase name=\"testLogin\" classname=\"SampleApp.AuthTests\">\n        <failure>Test failed</failure>\n    </testcase>\n    <testcase name=\"testLogout\" classname=\"SampleApp.AuthTests\"/>\n</testsuite>\n"), nil
+						}
+						return []byte{}, errors.New("unknown file")
+					},
+				},
+				RetryVDC: true,
+			},
+			args: args{
+				jobOpts: make(chan job.StartOptions),
+				opt: job.StartOptions{
+					Framework:   xcuitest.Kind,
+					DisplayName: "Dummy Test",
+					SmartRetry: job.SmartRetry{
+						FailedOnly: true,
+					},
+					TestOptions: map[string]interface{}{
+						"class": []string{"SampleApp/AuthTests/testLogin"},
+					},
+				},
+				previous: job.Job{
+					ID:    "fake-job-id",
+					IsRDC: false,
+				},
+			},
+			expected: job.StartOptions{
+				Framework:   xcuitest.Kind,
+				DisplayName: "Dummy Test",
+				TestOptions: map[string]interface{}{
+					"class": []string{"SampleApp/AuthTests/testLogin"},
+				},
+				SmartRetry: job.SmartRetry{
+					FailedOnly: true,
+				},
+			},
+		},
+		{
+			// Regression test: when a VDC XCUITest job fails but the JUnit has no <failure>
+			// elements (e.g. silent crash), the original class filter must be preserved.
+			// Previously, setClassesToRetry unconditionally overwrote opt.TestOptions["class"]
+			// with an empty slice, causing the VDC to run the entire test bundle without filters.
+			name: "XCUITest: VDC preserves original class filter when JUnit has no failures + SmartRetry",
+			init: init{
+				JobService: &mocks.FakeJobService{
+					GetJobAssetFileContentFn: func(_ context.Context, jobID, fileName string) ([]byte, error) {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
+							// Valid JUnit with test cases but no <failure> or <error> elements.
+							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase name=\"testCheckout\" classname=\"SampleApp.CartTests\"/>\n</testsuite>\n"), nil
+						}
+						return []byte{}, errors.New("unknown file")
+					},
+				},
+				RetryVDC: true,
+			},
+			args: args{
+				jobOpts: make(chan job.StartOptions),
+				opt: job.StartOptions{
+					Framework:   xcuitest.Kind,
+					DisplayName: "Dummy Test",
+					SmartRetry: job.SmartRetry{
+						FailedOnly: true,
+					},
+					TestOptions: map[string]interface{}{
+						"class": []string{"SampleApp/CartTests/testCheckout"},
+					},
+				},
+				previous: job.Job{
+					ID:    "fake-job-id",
+					IsRDC: false,
+				},
+			},
+			expected: job.StartOptions{
+				Framework:   xcuitest.Kind,
+				DisplayName: "Dummy Test",
+				// The original single-test filter must survive the retry unchanged.
+				TestOptions: map[string]interface{}{
+					"class": []string{"SampleApp/CartTests/testCheckout"},
+				},
+				SmartRetry: job.SmartRetry{
+					FailedOnly: true,
+				},
+			},
+		},
+		{
 			name: "Base Retry if junit is malformed",
 			init: init{
 				JobService: &mocks.FakeJobService{
