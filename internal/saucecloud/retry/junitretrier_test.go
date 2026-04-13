@@ -245,6 +245,49 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
+			// Regression test: when a VDC Espresso job fails but the JUnit has no <failure>
+			// elements (e.g. silent crash), the original class filter must be preserved.
+			name: "Espresso: VDC preserves original class filter when JUnit has no failures + SmartRetry",
+			init: init{
+				JobService: &mocks.FakeJobService{
+					GetJobAssetFileContentFn: func(_ context.Context, jobID, fileName string) ([]byte, error) {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
+							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n</testsuite>\n"), nil
+						}
+						return []byte{}, errors.New("unknown file")
+					},
+				},
+				RetryVDC: true,
+			},
+			args: args{
+				jobOpts: make(chan job.StartOptions),
+				opt: job.StartOptions{
+					Framework:   espresso.Kind,
+					DisplayName: "Dummy Test",
+					SmartRetry: job.SmartRetry{
+						FailedOnly: true,
+					},
+					TestOptions: map[string]interface{}{
+						"class": []string{"Demo.Class1", "Demo.Class2"},
+					},
+				},
+				previous: job.Job{
+					ID:    "fake-job-id",
+					IsRDC: false,
+				},
+			},
+			expected: job.StartOptions{
+				Framework:   espresso.Kind,
+				DisplayName: "Dummy Test",
+				TestOptions: map[string]interface{}{
+					"class": []string{"Demo.Class1", "Demo.Class2"},
+				},
+				SmartRetry: job.SmartRetry{
+					FailedOnly: true,
+				},
+			},
+		},
+		{
 			name: "XCUITest: VDC retries only failed tests when JUnit has failures + SmartRetry",
 			init: init{
 				JobService: &mocks.FakeJobService{

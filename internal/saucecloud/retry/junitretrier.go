@@ -92,7 +92,9 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) []stri
 	}
 
 	tests := getFailedEspressoTests(testcases)
-	opt.TestOptions["class"] = tests
+	if len(tests) > 0 {
+		opt.TestOptions["class"] = tests
+	}
 
 	return tests
 }
