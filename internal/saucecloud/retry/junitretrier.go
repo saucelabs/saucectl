@@ -78,9 +78,13 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) []stri
 		tests := getFailedXCUITests(testcases, opt.RealDevice)
 
 		// RDC and VDC API filter use different fields for test filtering.
+		// Only overwrite the existing class filter when there are actual failures to retry.
+		// If tests is empty (e.g. the previous attempt produced a JUnit with no <failure>
+		// elements), preserving the original filter avoids sending a session with no test
+		// filter at all, which would run the entire test bundle.
 		if opt.RealDevice {
 			opt.TestsToRun = tests
-		} else {
+		} else if len(tests) > 0 {
 			opt.TestOptions["class"] = tests
 		}
 
@@ -88,7 +92,9 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) []stri
 	}
 
 	tests := getFailedEspressoTests(testcases)
-	opt.TestOptions["class"] = tests
+	if len(tests) > 0 {
+		opt.TestOptions["class"] = tests
+	}
 
 	return tests
 }
