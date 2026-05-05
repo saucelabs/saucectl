@@ -177,7 +177,7 @@ const (
 	// SkippingSmartRetries implies that all tests will be retried.
 	SkippingSmartRetries = "Skipping SmartRetry. Retrying all tests from the previous job."
 	// SmartRetryUnsupportedClassnames indicates that JUnit classnames are not valid Java identifiers.
-	SmartRetryUnsupportedClassnames = "SmartRetry failedOnly is not supported for this test framework (e.g. Cucumber-on-Espresso). The retry will run the full suite."
+	SmartRetryUnsupportedClassnames = "SmartRetry failedOnly is not supported for Cucumber-on-Espresso. Failed tests with non-Java classnames cannot be retried individually and will be excluded from the retry filter."
 	// RetryWithTests indicates which tests will be run
 	RetryWithTests = "Retrying with failed tests: %q"
 	// UnableToCreateRunnerConfig indicates a failure to create runner config file
