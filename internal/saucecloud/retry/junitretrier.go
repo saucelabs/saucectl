@@ -139,10 +139,19 @@ func conformXCUITestClassName(name string, rdc bool) string {
 // getFailedEspressoTests returns a list of failed Espresso tests from the given
 // test cases. The format is "<className>#<testMethodName>", with the test
 // method name being optional.
+//
+// Test cases whose classname is not a valid Java class (e.g. Cucumber scenario
+// display names like "Collect Elements") are skipped because Android's
+// "am instrument -e class" filter only accepts real class identifiers.
 func getFailedEspressoTests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
+	skipped := false
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
+			if !isJavaClassName(tc.ClassName) {
+				skipped = true
+				continue
+			}
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
 			} else {
@@ -150,5 +159,46 @@ func getFailedEspressoTests(testCases []junit.TestCase) []string {
 			}
 		}
 	}
+	if skipped && len(classes) == 0 {
+		log.Warn().Msg(msg.SmartRetryUnsupportedClassnames)
+	}
 	return maps.Keys(classes)
+}
+
+// isJavaClassName returns true if the given name looks like a valid fully
+// qualified Java class name (e.g. "com.example.MyTest"). Each segment between
+// dots must start with a letter, underscore, or dollar sign and contain only
+// valid Java identifier characters. Cucumber scenario display names such as
+// "Collect Elements" or "Login.v2.0" are rejected as unsuitable for use with
+// Android's instrumentation class filter.
+func isJavaClassName(name string) bool {
+	if name == "" || !strings.Contains(name, ".") {
+		return false
+	}
+	for _, seg := range strings.Split(name, ".") {
+		if !isJavaIdentifier(seg) {
+			return false
+		}
+	}
+	return true
+}
+
+// isJavaIdentifier returns true if s is a valid Java identifier segment
+// (e.g. "com", "example", "MyTest", "MyTest$Inner").
+func isJavaIdentifier(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for i, r := range s {
+		if i == 0 {
+			if !(r >= 'a' && r <= 'z') && !(r >= 'A' && r <= 'Z') && r != '_' && r != '$' {
+				return false
+			}
+		} else {
+			if !(r >= 'a' && r <= 'z') && !(r >= 'A' && r <= 'Z') && !(r >= '0' && r <= '9') && r != '_' && r != '$' {
+				return false
+			}
+		}
+	}
+	return true
 }

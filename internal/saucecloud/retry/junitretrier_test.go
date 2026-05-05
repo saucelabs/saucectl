@@ -521,3 +521,41 @@ func Test_normalizeXCUITestClassName(t *testing.T) {
 		})
 	}
 }
+
+func Test_isJavaClassName(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		// Valid Java classnames
+		{name: "fully qualified class", input: "com.example.MyTest", want: true},
+		{name: "nested class with dollar", input: "com.example.MyTest$Inner", want: true},
+		{name: "two segments", input: "Demo.Class1", want: true},
+		{name: "underscore in package", input: "com.my_app.Test", want: true},
+		{name: "dollar in class", input: "com.example.$Generated", want: true},
+
+		// Cucumber display names
+		{name: "cucumber feature name with spaces", input: "Collect Elements", want: false},
+		{name: "cucumber long scenario name", input: "Testing Collect Elements in different scenarios", want: false},
+
+		// Edge cases - no dot
+		{name: "single word no package", input: "MyTest", want: false},
+		{name: "empty string", input: "", want: false},
+
+		// Edge cases - dot present but not valid Java
+		{name: "cucumber name with dot", input: "Collect.Elements v2", want: false},
+		{name: "version string", input: "Login.v2.0", want: false},
+		{name: "numeric segment", input: "123.456", want: false},
+		{name: "leading dot", input: ".com.example", want: false},
+		{name: "trailing dot", input: "com.example.", want: false},
+		{name: "consecutive dots", input: "com..example", want: false},
+		{name: "special characters", input: "com.example/MyTest", want: false},
+		{name: "hyphen in segment", input: "com.my-app.Test", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isJavaClassName(tt.input))
+		})
+	}
+}
