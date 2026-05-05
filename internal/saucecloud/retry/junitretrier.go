@@ -145,11 +145,11 @@ func conformXCUITestClassName(name string, rdc bool) string {
 // "am instrument -e class" filter only accepts real class identifiers.
 func getFailedEspressoTests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
-	skipped := false
+	var skippedClassnames []string
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
 			if !isJavaClassName(tc.ClassName) {
-				skipped = true
+				skippedClassnames = append(skippedClassnames, tc.ClassName)
 				continue
 			}
 			if tc.Name != "" {
@@ -159,8 +159,11 @@ func getFailedEspressoTests(testCases []junit.TestCase) []string {
 			}
 		}
 	}
-	if skipped && len(classes) == 0 {
-		log.Warn().Msg(msg.SmartRetryUnsupportedClassnames)
+	if len(skippedClassnames) > 0 {
+		log.Warn().
+			Int("skipped", len(skippedClassnames)).
+			Strs("classnames", skippedClassnames).
+			Msg(msg.SmartRetryUnsupportedClassnames)
 	}
 	return maps.Keys(classes)
 }
