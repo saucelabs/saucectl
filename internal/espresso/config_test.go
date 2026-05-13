@@ -189,6 +189,10 @@ suites:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
+      - name: "Google Pixel 9 GoogleAPI Emulator"
+        platformVersions:
+          - "8.2"
+        armRequired: true
 `, fs.WithMode(0655)))
 	defer dir.Remove()
 
@@ -233,6 +237,14 @@ suites:
 						PlatformVersions: []string{
 							"8.1",
 						},
+						ARMRequired: false,
+					},
+					{
+						Name: "Google Pixel 9 GoogleAPI Emulator",
+						PlatformVersions: []string{
+							"8.2",
+						},
+						ARMRequired: true,
 					},
 				}},
 		},
