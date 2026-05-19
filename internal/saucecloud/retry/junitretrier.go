@@ -145,11 +145,11 @@ func conformXCUITestClassName(name string, rdc bool) string {
 // "am instrument -e class" filter only accepts real class identifiers.
 func getFailedEspressoTests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
-	var skippedClassnames []string
+	skipped := map[string]struct{}{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
 			if !isJavaClassName(tc.ClassName) {
-				skippedClassnames = append(skippedClassnames, tc.ClassName)
+				skipped[tc.ClassName] = struct{}{}
 				continue
 			}
 			if tc.Name != "" {
@@ -159,10 +159,10 @@ func getFailedEspressoTests(testCases []junit.TestCase) []string {
 			}
 		}
 	}
-	if len(skippedClassnames) > 0 {
+	if len(skipped) > 0 {
 		log.Warn().
-			Int("skipped", len(skippedClassnames)).
-			Strs("classnames", skippedClassnames).
+			Int("skipped", len(skipped)).
+			Strs("classnames", maps.Keys(skipped)).
 			Msg(msg.SmartRetryUnsupportedClassnames)
 	}
 	return maps.Keys(classes)
@@ -188,6 +188,11 @@ func isJavaClassName(name string) bool {
 
 // isJavaIdentifier returns true if s is a valid Java identifier segment
 // (e.g. "com", "example", "MyTest", "MyTest$Inner").
+//
+// Intentionally ASCII-only. The JLS permits Unicode letters in identifiers,
+// but real-world Android test classes are ASCII; restricting to ASCII keeps
+// the check simple and avoids accepting names that the instrumentation class
+// filter would still fail to match.
 func isJavaIdentifier(s string) bool {
 	if len(s) == 0 {
 		return false
