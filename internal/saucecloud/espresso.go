@@ -255,6 +255,9 @@ func (r *EspressoRunner) newStartOptions(
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
 
+		// VMD specific settings
+		ARMRequired: d.armRequired,
+
 		// Configure device settings
 		RealDeviceKind: strings.ToLower(espresso.Android),
 		AppSettings: job.AppSettings{

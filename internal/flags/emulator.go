@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -54,6 +55,11 @@ func (e *Emulator) Set(s string) error {
 			e.Orientation = val
 		case "platformVersion":
 			e.PlatformVersions = []string{val}
+		case "armRequired":
+			e.ARMRequired, err = strconv.ParseBool(val)
+			if err != nil {
+				return fmt.Errorf("invalid value for armRequired: %w", err)
+			}
 		}
 	}
 
