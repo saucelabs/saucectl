@@ -402,6 +402,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "15.14.2",
                   "15.12.0",
                   "15.9.0",
                   "15.7.0",
@@ -412,8 +413,7 @@
                   "14.3.2",
                   "14.1.0",
                   "14.0.0",
-                  "13.16.0",
-                  "13.15.2"
+                  "13.16.0"
                 ],
                 "description": "Which framework version to use."
               }
@@ -1346,6 +1346,7 @@
                 "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "1.59.1",
                   "1.58.2",
                   "1.58.1",
                   "1.57.0",
@@ -1353,8 +1354,7 @@
                   "1.55.1",
                   "1.52.0",
                   "1.50.1",
-                  "1.49.1",
-                  "1.49.0"
+                  "1.49.1"
                 ]
               },
               "configFile": {
