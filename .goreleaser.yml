@@ -48,6 +48,11 @@ builds:
 # `brew install saucelabs/saucectl/saucectl` users receive an update that tells
 # them to switch to the Cask.  Once adoption has moved over, this section can be
 # removed entirely.
+#
+# NOTE: GoReleaser v2.16.0 turned the `brews` deprecation into a hard error
+# (`goreleaser check` fails). The CI/release workflows are pinned to `~> v2.15`
+# to keep publishing this formula until the formula -> cask migration is fully
+# wound down, after which this block and the version pin should be removed.
 brews:
   - ids:
       - saucectl-darwin

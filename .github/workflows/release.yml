@@ -39,7 +39,12 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: '~> v2'
+          # Pinned to the v2.15 line: GoReleaser v2.16.0 turned the deprecated
+          # `brews` block (see .goreleaser.yml) into a hard error, which would
+          # break the release. v2.15.x still publishes the formula with a warning.
+          # TODO: once the Homebrew formula -> cask migration is complete, remove
+          # the `brews` block in .goreleaser.yml and bump this back to `~> v2`.
+          version: '~> v2.15'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
