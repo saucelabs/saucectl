@@ -1,0 +1,38 @@
+# saucectl config for the TCM integration demo.
+#
+# Separate from .sauce/testcafe.yml (that one is the repo's own CI, pinned to
+# us-west-1) so this can target STAGING and carry the `tcm` marker without
+# disturbing CI. Runs the same TestCafe tests under tests/e2e/testcafe/.
+#
+# Run:
+#   SAUCE_USERNAME=<staging-user> SAUCE_ACCESS_KEY=<staging-key> \
+#     saucectl run -c .sauce/tcm-demo.yml
+#
+# The `tcm` tag is the run-level MARKER the TCM ingest worker keys on. Per-test
+# case identity comes from each job's sauce-test-report.json — not from this tag.
+apiVersion: v1alpha
+kind: testcafe
+sauce:
+  region: staging
+  concurrency: 1
+  metadata:
+    tags:
+      - tcm
+    build: "tcm-demo-$BUILD_ID"
+defaults:
+  timeout: 5m
+testcafe:
+  version: 3.7.2
+rootDir: tests/e2e/testcafe/
+suites:
+  - name: Chrome on staging (TCM demo)
+    browserName: chrome
+    src:
+      # Just the demo test (its names are unique per run → new TCM cases each run).
+      - "tcm-demo.test.js"
+    browserArgs: ["--disable-safe-browsing", "--disable-web-security", "--disable-notifications", "--deny-permission-prompts", "--disable-features=LocalNetworkAccessChecks"]
+    platformName: "Windows 11"
+    compilerOptions:
+      typescript:
+        options:
+          allowUnreachableCode: true
