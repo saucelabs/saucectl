@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "saucectl authoring runner configuration",
+  "description": "Configuration file for running AI-authored (Sauce Test Authoring) test suites using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "authoring"
+    },
+    "suites": {
+      "description": "The set of AI-authored test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "testSuiteId": {
+            "description": "The Sauce Labs test suite ID to run, as created by `saucectl author` / `saucectl author sync`.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Tags to apply to each test case run triggered for this suite.",
+            "type": "array"
+          },
+          "timeout": {
+            "description": "How long to wait for a single test case's job(s) to finish before treating it as timed out.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "testSuiteId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "suites"
+  ],
+  "additionalProperties": true
+}

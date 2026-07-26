@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/authoringrun"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
@@ -221,6 +222,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
+	}
+	if typeDef.Kind == authoringrun.Kind {
+		return runAuthoring(cmd, false)
 	}
 
 	msg.LogUnsupportedFramework(typeDef.Kind)

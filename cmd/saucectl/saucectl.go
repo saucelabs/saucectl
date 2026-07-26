@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cmd/apit"
 	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
+	"github.com/saucelabs/saucectl/internal/cmd/author"
 	"github.com/saucelabs/saucectl/internal/cmd/builds"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
@@ -73,6 +74,7 @@ func main() {
 		apit.Command(cmd.PersistentPreRun),
 		builds.Command(cmd.PersistentPreRun),
 		devices.Command(cmd.PersistentPreRun),
+		author.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.ExecuteContext(newContext()); err != nil {
