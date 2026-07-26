@@ -84,7 +84,12 @@ re-running it against a changed spec replaces the old test case rather than
 creating a duplicate.
 
 Use 'saucectl author sync <dir>' to reconcile an entire directory of specs at
-once, including retiring test cases whose source spec has been deleted.`,
+once, including retiring test cases whose source spec has been deleted.
+
+Use 'saucectl author add testsuite <name>' or 'saucectl author add testcase
+<spec.md>' to create a single resource directly (the same lockfile-tracked
+behavior as this command, just addressed by subcommand and noun instead of
+--spec).`,
 		SilenceUsage:     true,
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -135,6 +140,7 @@ once, including retiring test cases whose source spec has been deleted.`,
 
 	cmd.AddCommand(
 		SyncCommand(),
+		AddCommand(),
 	)
 
 	return cmd

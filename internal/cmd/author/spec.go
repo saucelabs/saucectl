@@ -57,9 +57,14 @@ func runSingleSpec(cmd *cobra.Command, specPath string, flags *sharedFlags) erro
 		return fmt.Errorf("failed to read lockfile %s: %w", flags.lockfile, err)
 	}
 
-	suiteID, err := resolveOrCreateSuite(cmd.Context(), flags.testSuite)
-	if err != nil {
-		return fmt.Errorf("failed to resolve test suite %q: %w", flags.testSuite, err)
+	// A test suite is optional here: with no --test-suite, the test case is
+	// created standalone (no suite membership) rather than forced into one.
+	var suiteID string
+	if flags.testSuite != "" {
+		suiteID, err = resolveOrCreateSuite(cmd.Context(), flags.testSuite)
+		if err != nil {
+			return fmt.Errorf("failed to resolve test suite %q: %w", flags.testSuite, err)
+		}
 	}
 
 	printStart(flags.out, specPath)
@@ -101,6 +106,39 @@ func syncSpec(ctx context.Context, lf *authoring.Lockfile, specPath, suiteID str
 	if !flags.force && !lf.Changed(specPath, hash) {
 		res.Action = "unchanged"
 		res.TestCaseID = existing.TestCaseID
+
+		if suiteID != "" && suiteID != existing.TestSuiteID {
+			// The spec itself hasn't changed, but this invocation targets a
+			// different suite than last time -- most commonly, assigning a
+			// previously-standalone test case (created via `add testcase`
+			// with no --test-suite) to a suite after the fact. Reuse the
+			// existing test case instead of regenerating one from scratch.
+			if _, err := authoringService.UpdateTestSuite(ctx, suiteID, authoring.UpdateTestSuiteOptions{
+				AddTestCases: []string{existing.TestCaseID},
+			}); err != nil {
+				res.Action = "failed"
+				res.Error = err.Error()
+				return res, false, fmt.Errorf("failed to add existing test case %s to suite %s: %w", existing.TestCaseID, suiteID, err)
+			}
+			if existing.TestSuiteID != "" {
+				if _, err := authoringService.UpdateTestSuite(ctx, existing.TestSuiteID, authoring.UpdateTestSuiteOptions{
+					RemoveTestCases: []string{existing.TestCaseID},
+				}); err != nil {
+					log.Warn().Err(err).Str("testCaseId", existing.TestCaseID).Msg("added test case to new suite but failed to remove it from its previous suite")
+				}
+			}
+
+			lf.Entries[specPath] = authoring.Entry{
+				Hash:          hash,
+				TestCaseID:    existing.TestCaseID,
+				TestSuiteID:   suiteID,
+				TestSuiteName: flags.testSuite,
+				SyncedAt:      time.Now().UTC(),
+			}
+			res.Action = "reassigned"
+			return res, true, nil
+		}
+
 		return res, false, nil
 	}
 
@@ -168,17 +206,20 @@ func syncSpec(ctx context.Context, lf *authoring.Lockfile, specPath, suiteID str
 	}
 
 	// Swap the new test case into the suite, and remove the old one (if
-	// this was a replace, not a first-time create).
-	updateOpts := authoring.UpdateTestSuiteOptions{
-		AddTestCases: []string{task.TestCaseID},
-	}
-	if hadEntry && existing.TestCaseID != "" && existing.TestSuiteID == suiteID {
-		updateOpts.RemoveTestCases = []string{existing.TestCaseID}
-	}
-	if _, err := authoringService.UpdateTestSuite(ctx, suiteID, updateOpts); err != nil {
-		res.Action = "failed"
-		res.Error = err.Error()
-		return res, false, fmt.Errorf("authored %s (test case %s) but failed to update suite %s: %w", specPath, task.TestCaseID, suiteID, err)
+	// this was a replace, not a first-time create). Skipped entirely for a
+	// standalone test case (no --test-suite given).
+	if suiteID != "" {
+		updateOpts := authoring.UpdateTestSuiteOptions{
+			AddTestCases: []string{task.TestCaseID},
+		}
+		if hadEntry && existing.TestCaseID != "" && existing.TestSuiteID == suiteID {
+			updateOpts.RemoveTestCases = []string{existing.TestCaseID}
+		}
+		if _, err := authoringService.UpdateTestSuite(ctx, suiteID, updateOpts); err != nil {
+			res.Action = "failed"
+			res.Error = err.Error()
+			return res, false, fmt.Errorf("authored %s (test case %s) but failed to update suite %s: %w", specPath, task.TestCaseID, suiteID, err)
+		}
 	}
 
 	// Best-effort cleanup of the superseded test case. Its removal from the
@@ -241,22 +282,32 @@ func pollGenerateTask(ctx context.Context, taskID string, every, timeout time.Du
 // resolveOrCreateSuite looks up a test suite by exact name match, creating
 // it if it doesn't exist yet.
 func resolveOrCreateSuite(ctx context.Context, name string) (string, error) {
+	id, _, err := resolveOrCreateSuiteVerbose(ctx, name, nil)
+	return id, err
+}
+
+// resolveOrCreateSuiteVerbose is like resolveOrCreateSuite, but also reports
+// whether a new suite was actually created (as opposed to an existing one
+// being resolved by name), and accepts tags to apply if creation happens.
+// Used by `author add testsuite`, which needs to tell the two cases apart to
+// report accurately.
+func resolveOrCreateSuiteVerbose(ctx context.Context, name string, tags []string) (id string, created bool, err error) {
 	suites, err := authoringService.ListTestSuites(ctx, authoring.ListTestSuiteOptions{Search: name})
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	for _, s := range suites {
 		if strings.EqualFold(s.Name, name) {
-			return s.ID, nil
+			return s.ID, false, nil
 		}
 	}
 
-	suite, err := authoringService.CreateTestSuite(ctx, name, nil)
+	suite, err := authoringService.CreateTestSuite(ctx, name, tags)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return suite.ID, nil
+	return suite.ID, true, nil
 }
 
 func loadTargetFile(path string) (map[string]interface{}, error) {
