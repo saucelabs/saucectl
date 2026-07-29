@@ -1,11 +1,24 @@
+version: "2"
+
 linters:
   enable:
-    - revive
     - errname
+    - revive
+  settings:
+    staticcheck:
+      # https://staticcheck.io/docs/configuration/options/#checks
+      # Matches the pre-v2 setup: all SA/S checks except SA1019; the ST (style)
+      # and QF (quickfix) groups were not enabled before the v2 migration.
+      checks: ["all", "-SA1019", "-ST*", "-QF*"]
+  exclusions:
+    # The default exclusions that golangci-lint v1 applied implicitly.
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+
+formatters:
+  enable:
     - goimports
-linters-settings:
-  staticcheck:
-    # https://staticcheck.io/docs/configuration/options/#checks
-    # Default: ["*"]
-    checks: [ "all", "-SA1019" ]
-  
