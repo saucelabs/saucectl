@@ -109,3 +109,33 @@ func TestWebdriver_StartJob(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatEnv(t *testing.T) {
+	tests := []struct {
+		name string
+		in   map[string]string
+		want string
+	}{
+		{
+			name: "value is always serialized, even when empty",
+			in:   map[string]string{"WIDGETS_ENDPOINT": ""},
+			want: `[{"name":"WIDGETS_ENDPOINT","value":""}]`,
+		},
+		{
+			name: "regular entry",
+			in:   map[string]string{"FOO": "bar"},
+			want: `[{"name":"FOO","value":"bar"}]`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, err := json.Marshal(formatEnv(tt.in))
+			if err != nil {
+				t.Fatalf("failed to marshal env: %v", err)
+			}
+			if string(b) != tt.want {
+				t.Errorf("formatEnv() serialized to %s, want %s", b, tt.want)
+			}
+		})
+	}
+}
