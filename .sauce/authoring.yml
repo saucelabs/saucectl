@@ -1,0 +1,30 @@
+apiVersion: v1alpha
+kind: authoring
+sauce:
+  region: us-west-1
+  concurrency: 2
+  metadata:
+    build: "saucectl authoring $BUILD_ID"
+defaults:
+  timeout: 15m
+suites:
+  # Runs one AI-authored test case (a Swag Labs login + add-to-cart journey)
+  # against an explicit target. Omit `targets` to use the case's stored ones.
+  - name: "saucedemo checkout on Chrome"
+    testCases: [6a882c1dc8b4482c166e96c9]
+    targets:
+      - capabilities:
+          browserName: chrome
+          browserVersion: latest
+          platformName: "Windows 11"
+artifacts:
+  download:
+    when: fail
+    match:
+      - "*.mp4"
+      - log.json
+    directory: ./artifacts/
+reporters:
+  junit:
+    enabled: true
+    filename: saucectl-authoring-report.xml

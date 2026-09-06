@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/authoring"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
@@ -50,6 +51,7 @@ var (
 	buildTimeout        = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
+	authoringTimeout    = 2 * time.Minute
 
 	typeDef config.TypeDef
 
@@ -218,6 +220,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == apitest.Kind {
 		return runApitest(cmd, false)
+	}
+	if typeDef.Kind == authoring.Kind {
+		return runAuthoring(cmd, false)
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
