@@ -8,10 +8,12 @@ sauce:
 defaults:
   timeout: 15m
 suites:
-  # Runs one AI-authored test case (a Swag Labs login + add-to-cart journey)
-  # against an explicit target. Omit `targets` to use the case's stored ones.
+  # AI-authored test cases live in the service, not in this repository, so
+  # there is no id that works for every reader: substitute one of your own,
+  # from `saucectl authoring testcases list`, or reference a suite by name
+  # with `testSuiteName:` instead. Omit `targets` to use the case's stored ones.
   - name: "saucedemo checkout on Chrome"
-    testCases: [6a882c1dc8b4482c166e96c9]
+    testCases: [<your-test-case-id>]
     targets:
       - capabilities:
           browserName: chrome

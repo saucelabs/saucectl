@@ -379,7 +379,20 @@ Run each command; each must fail immediately (well under a second) with the mess
 - Steps 1 and 2 print two IDs each, with no overlap.
 - Step 3: `{"items":[],"total":N}`.
 - Step 4: equals `N`. A warning about a large listing appears only when `N` exceeds 200 (so probably not
-  in the reference org).
+  in the reference org), and never when `-o json` is in play, because it would land inside the document.
+
+### 3.4a `--all` honours `--skip` and says what it cannot honour
+
+**Steps**
+1. `a testcases list --all -o json | jq '.items | length'`
+2. `a testcases list --all --skip 5 -o json | jq '.items | length'`
+3. `a testcases list --all --limit 5 2>&1 | grep WRN`
+4. `a testcases list --all --limit 5 -o json | head -1`
+
+**Expected**
+- Step 2 returns exactly 5 fewer items than step 1: `--skip` is the starting offset, not ignored.
+- Step 3 warns that `--limit` is ignored with `--all` and names the page size.
+- Step 4 starts with `{`: no warning is mixed into the JSON, so `| jq` works.
 
 ### 3.5 Empty result and unknown format
 
@@ -413,13 +426,17 @@ Run each command; each must fail immediately (well under a second) with the mess
 
 ### 3.8 A stored empty tunnel name is shown honestly
 
+Some test cases authored before this feature store `scTunnelName: ""`, which the service treats as a
+real tunnel lookup and refuses. Find one, read-only, without naming anyone's case in this document:
+
 **Steps**
-1. `a testcases get 6a6b903c0405fb400076b2ba | grep Tunnel`
+1. `a testcases list --all -o json | jq -r '.items[] | select(.runSettings.scTunnelName == "") | .id'`
+2. If that prints nothing, record **not run** and skip to 3.9. Otherwise, for the first id it prints:
+   `a testcases get <that id> | grep Tunnel`
 
 **Expected**
-- `Tunnel  "" (empty; cleared automatically on run)`. This colleague's test case stores an empty string;
-  reading it is harmless. If the row shows `-`, someone has run the case since and cleared it — record
-  "not reproducible".
+- Step 2: `Tunnel  "" (empty; cleared automatically on run)`.
+- Reading a case you do not own is harmless; do not run or modify it.
 
 ### 3.9 Rename
 
@@ -1193,9 +1210,12 @@ EOF
 2. `./saucectl run --disable-usage-metrics -c $W/timeout.yml; echo "exit=$?"`
 
 **Expected**
-- `ERR Timed out waiting; the run may still be going on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- `ERR Timed out waiting; stopping the run on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- One `INF Attempting to stop job...` line per job of the run.
 - The row shows ✖ with Status `?`; footer `1 of 1 suites have failed (100%)`; `exit=1`.
-- `a testcases get-run $TC <run>` a minute later shows the run finished on its own.
+- `a testcases get-run $TC <run>` about 30 s later shows the run **terminal**, not still going: saucectl
+  now stops the jobs it has stopped waiting for, so the timeout no longer leaves a VM busy for its full
+  duration. Open the job link and confirm the job is not running.
 
 ### 10.13 Ctrl-C during a run
 
@@ -1205,9 +1225,12 @@ EOF
 3. A minute later: `a testcases get-run $TC <run id from the log>`
 
 **Expected**
-- `WRN Interrupted locally; the run continues on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- `WRN Interrupted; stopping the run on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- One `INF Attempting to stop job...` line per job of the run.
 - The results table still renders, the row `in progress`; exit 1.
-- Step 3: `passed (1/1)` — the interruption did not stop the remote run.
+- Step 3: the run is **terminal** rather than still going — the interruption now stops the remote work.
+  A job that had already finished before the stop request reports `passed`; either way it must not still
+  be running. Open the job link and confirm.
 - Variant: press Ctrl-C **before** `Run started` appears (during the entitlement check). Expected log:
   `WRN Run was not started: interrupted.`
 
@@ -1483,12 +1506,12 @@ Run each if you have the environment; otherwise record **not run** with the reas
 
 ### 13.3 A case that stores an empty tunnel name
 
-Only with the owner's agreement (test case `6a6b903c0405fb400076b2ba` is a colleague's Android emulator
+Only with the owner's agreement (test case `<a-case-with-an-empty-stored-tunnel>` is a colleague's Android emulator
 test).
 
 **Steps**
-1. `a testcases get 6a6b903c0405fb400076b2ba | grep Tunnel` (must show the empty-string row)
-2. `a testcases run 6a6b903c0405fb400076b2ba --build manual-$I` and poll `get-run`.
+1. Find a case with a stored empty tunnel name as in 3.8, and confirm the row shows `""`.
+2. With its owner's agreement: `a testcases run <that id> --build manual-$I` and poll `get-run`.
 
 **Expected**
 - The run starts and completes: the runner sends `scTunnelName: null`, which the service accepts. Note that

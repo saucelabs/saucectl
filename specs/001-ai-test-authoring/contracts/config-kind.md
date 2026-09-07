@@ -35,7 +35,7 @@ suites:
           browserName: chrome
           platformName: "Windows 11"
   - name: Two specific cases
-    testCases: [6a9ba94e5c93b6d220adc17d, 6a88b8ee7760d47c61f9e1fa]
+    testCases: [<test-case-id>, <another-test-case-id>]
     # no targets -> each test case's own stored run targets apply
 ```
 
