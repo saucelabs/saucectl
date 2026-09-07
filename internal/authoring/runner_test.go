@@ -618,3 +618,189 @@ func TestRunner_PollsWithKnownTestCaseIDWhenStartResponseOmitsIt(t *testing.T) {
 		t.Errorf("polled with %q, want the requested test case id", polledWith)
 	}
 }
+
+// fakeStopper records which jobs it was asked to stop.
+type fakeStopper struct {
+	mu      sync.Mutex
+	stopped []string
+	rdc     []bool
+}
+
+func (f *fakeStopper) StopJob(_ context.Context, jobID string, realDevice bool) (job.Job, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.stopped = append(f.stopped, jobID)
+	f.rdc = append(f.rdc, realDevice)
+	return job.Job{ID: jobID}, nil
+}
+
+func TestRunner_StopsTheRunOnTimeout(t *testing.T) {
+	// We have stopped waiting, so the work must stop too: otherwise a
+	// cancelled run keeps a VM or device busy for its full duration.
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: "case"}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+		getRun: func(_ context.Context, tc, id string) (Run, error) {
+			return Run{ID: id, TestCaseID: tc, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+	}
+	stopper := &fakeStopper{}
+	r := newRunner(svc, &captureReporter{}, newProject(Suite{Name: "s", TestCases: []string{"tc1"}, Timeout: 30 * time.Millisecond}))
+	r.Stopper = stopper
+
+	if code, _ := r.RunProject(context.Background()); code != 1 {
+		t.Errorf("exit = %d, want 1", code)
+	}
+	stopper.mu.Lock()
+	defer stopper.mu.Unlock()
+	if len(stopper.stopped) != 1 || stopper.stopped[0] != "sauce-1" {
+		t.Errorf("stopped %v, want the run's job", stopper.stopped)
+	}
+}
+
+func TestRunner_StopsTheRunOnCancellation(t *testing.T) {
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: "case"}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+		getRun: func(_ context.Context, tc, id string) (Run, error) {
+			return Run{ID: id, TestCaseID: tc, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+	}
+	stopper := &fakeStopper{}
+	r := newRunner(svc, &captureReporter{}, newProject(Suite{Name: "s", TestCases: []string{"tc1"}, Timeout: time.Hour}))
+	r.Stopper = stopper
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() { time.Sleep(20 * time.Millisecond); cancel() }()
+	_, _ = r.RunProject(ctx)
+
+	stopper.mu.Lock()
+	defer stopper.mu.Unlock()
+	// The stop runs on a context detached from the cancelled one, so it must
+	// still have happened.
+	if len(stopper.stopped) != 1 {
+		t.Errorf("stopped %v, want one job despite the cancelled context", stopper.stopped)
+	}
+}
+
+func TestRunner_AsyncDoesNotStopAnything(t *testing.T) {
+	// Not waiting is the point of --async; stopping would defeat it.
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: "case"}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+	}
+	stopper := &fakeStopper{}
+	r := newRunner(svc, &captureReporter{}, newProject(Suite{Name: "s", TestCases: []string{"tc1"}}))
+	r.Stopper, r.Async = stopper, true
+
+	if code, _ := r.RunProject(context.Background()); code != 0 {
+		t.Errorf("exit = %d, want 0", code)
+	}
+	if len(stopper.stopped) != 0 {
+		t.Errorf("stopped %v under --async", stopper.stopped)
+	}
+}
+
+func TestRunner_NilStopperIsSafe(t *testing.T) {
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+		getRun: func(_ context.Context, tc, id string) (Run, error) {
+			return Run{ID: id, TestCaseID: tc, Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+	}
+	r := newRunner(svc, &captureReporter{}, newProject(Suite{Name: "s", TestCases: []string{"tc1"}, Timeout: 20 * time.Millisecond}))
+	if code, _ := r.RunProject(context.Background()); code != 1 {
+		t.Errorf("exit = %d", code)
+	}
+}
+
+func TestExpectedJobs(t *testing.T) {
+	two := []Target{{Capabilities: map[string]any{"browserName": "chrome"}}, {Capabilities: map[string]any{"browserName": "firefox"}}}
+	tests := []struct {
+		name string
+		c    ResolvedCase
+		want int
+	}{
+		{"suite targets win", ResolvedCase{Suite: Suite{Targets: two}, TestCase: TestCase{RunSettings: RunSettings{RunTargets: two}}}, 2},
+		{"stored run targets", ResolvedCase{TestCase: TestCase{RunSettings: RunSettings{RunTargets: two}}}, 2},
+		{"primary target only", ResolvedCase{}, 1},
+	}
+	for _, tt := range tests {
+		if got := expectedJobs(tt.c); got != tt.want {
+			t.Errorf("%s: expectedJobs = %d, want %d", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestRunner_ConcurrencyCountsJobsNotRuns(t *testing.T) {
+	// One run fans out to one job per target, so a per-run semaphore let a
+	// two-target suite put twice the configured load on the organisation.
+	yes := true
+	two := []Target{{Capabilities: map[string]any{"browserName": "chrome"}}, {Capabilities: map[string]any{"browserName": "firefox"}}}
+	var inFlight, maxInFlight int32
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: id}, nil },
+		runTestCase: func(_ context.Context, id, _ string, opts RunOptions) (Run, error) {
+			n := atomic.AddInt32(&inFlight, int32(len(opts.Targets)))
+			for {
+				m := atomic.LoadInt32(&maxInFlight)
+				if n <= m || atomic.CompareAndSwapInt32(&maxInFlight, m, n) {
+					break
+				}
+			}
+			time.Sleep(25 * time.Millisecond)
+			atomic.AddInt32(&inFlight, -int32(len(opts.Targets)))
+			jobs := []RunJob{chromeJob(&yes), chromeJob(&yes)}
+			return Run{ID: "run-" + id, TestCaseID: id, Jobs: jobs}, nil
+		},
+	}
+	p := newProject(Suite{Name: "s", TestCases: []string{"a", "b", "c"}, Targets: two})
+	p.Sauce.Concurrency = 2
+	r := newRunner(svc, &captureReporter{}, p)
+
+	if code, _ := r.RunProject(context.Background()); code != 0 {
+		t.Errorf("exit = %d", code)
+	}
+	if maxInFlight > 2 {
+		t.Errorf("max jobs in flight = %d, want <= 2 (SC-011 counts jobs, not runs)", maxInFlight)
+	}
+}
+
+func TestRunner_CaseNeedingMoreJobsThanTheBudgetStillRuns(t *testing.T) {
+	// Capping the weight matters: without it a four-target case under
+	// concurrency 2 would block for ever.
+	yes := true
+	four := make([]Target, 4)
+	for i := range four {
+		four[i] = Target{Capabilities: map[string]any{"browserName": "chrome"}}
+	}
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id, Jobs: []RunJob{chromeJob(&yes)}}, nil
+		},
+	}
+	p := newProject(Suite{Name: "s", TestCases: []string{"a"}, Targets: four})
+	p.Sauce.Concurrency = 2
+	r := newRunner(svc, &captureReporter{}, p)
+
+	done := make(chan int, 1)
+	go func() { code, _ := r.RunProject(context.Background()); done <- code }()
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Errorf("exit = %d", code)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("a case needing more jobs than the concurrency budget never ran")
+	}
+}
