@@ -94,6 +94,7 @@ func runAuthoringInCloud(ctx context.Context, p authoring.Project, regio region.
 		TestCases:  svc,
 		TestSuites: svc,
 		Artifacts:  jobService,
+		Stopper:    jobService,
 		Builds:     buildService,
 		Tunnels:    restoClient,
 		Region:     regio,

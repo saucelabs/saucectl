@@ -24,6 +24,17 @@ import (
 // keeps requests modest without adding noticeable latency.
 const DefaultPollInterval = 5 * time.Second
 
+// stopJobTimeout bounds the attempt to stop jobs after we have stopped
+// waiting. It runs on a context detached from the interrupted one, so it needs
+// a deadline of its own to honour the promise that nothing waits for ever.
+const stopJobTimeout = 30 * time.Second
+
+// JobStopper stops a Sauce job. It is the part of saucecloud.JobService the
+// runner needs to avoid leaving work running after we stop watching it.
+type JobStopper interface {
+	StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error)
+}
+
 // ArtifactDownloader is the part of saucecloud.JobService the runner needs.
 // It takes a job.Job so the shared skip rules (when: fail/pass, timed out,
 // unfinished) apply exactly as they do for every other kind.
@@ -46,6 +57,10 @@ type Runner struct {
 	TestSuites TestSuiteService
 	// Artifacts downloads job assets after a run; nil disables downloads.
 	Artifacts ArtifactDownloader
+	// Stopper stops jobs when we stop waiting for them, so an interrupted or
+	// timed-out run does not keep consuming the organisation's concurrency.
+	// nil disables stopping.
+	Stopper JobStopper
 	// Builds resolves the build link shown under the results table; nil
 	// leaves it out.
 	Builds build.Service
@@ -224,24 +239,89 @@ func (r *Runner) runCases(ctx context.Context, cases []ResolvedCase) bool {
 	if ccy < 1 {
 		ccy = 1
 	}
-	log.Info().Int("concurrency", ccy).Int("testCases", len(cases)).Msg("Starting AI-authored test runs.")
+	totalJobs := 0
+	for _, c := range cases {
+		totalJobs += expectedJobs(c)
+	}
+	log.Info().Int("concurrency", ccy).Int("testCases", len(cases)).Int("jobs", totalJobs).
+		Msg("Starting AI-authored test runs.")
 
 	results := make(chan runResult, len(cases))
 	sem := make(chan struct{}, ccy)
+	// gate serialises acquisition. Without it two cases each needing two of
+	// two slots would take one apiece and wait for ever for the other's —
+	// a deadlock, not merely unfair. Holding the gate while waiting means
+	// one case queues behind another, which is the price of a correct
+	// ceiling and is invisible at these sizes.
+	gate := make(chan struct{}, 1)
 	for _, c := range cases {
 		go func(c ResolvedCase) {
-			select {
-			case sem <- struct{}{}:
-			case <-ctx.Done():
+			// The limit counts Sauce jobs, not runs: one run fans out to one
+			// job per target, so a per-run semaphore would let a suite with
+			// four targets put four times the configured load on the
+			// organisation's capacity (SC-011). Weight each case by the jobs
+			// it will start, capped at the whole budget so a case needing
+			// more than that still runs — alone — rather than never.
+			weight := expectedJobs(c)
+			if weight > ccy {
+				weight = ccy
+			}
+			if !acquire(ctx, gate, sem, weight) {
 				results <- runResult{Case: c, Err: ctx.Err(), Interrupted: true, StartTime: time.Now(), EndTime: time.Now()}
 				return
 			}
-			defer func() { <-sem }()
+			defer release(sem, weight)
 			results <- r.runCase(ctx, c)
 		}(c)
 	}
 
 	return r.collectResults(ctx, results, len(cases))
+}
+
+// expectedJobs reports how many Sauce jobs one resolved case will start. The
+// service starts one per target: the suite's targets when it overrides them,
+// otherwise the case's own stored run targets, otherwise its single primary
+// target. Everything needed is already in hand, so this costs no request.
+func expectedJobs(c ResolvedCase) int {
+	if n := len(c.Suite.Targets); n > 0 {
+		return n
+	}
+	if n := len(c.TestCase.RunSettings.RunTargets); n > 0 {
+		return n
+	}
+	return 1
+}
+
+// acquire takes n slots, or reports false if the context ended first.
+//
+// The gate ensures only one caller collects slots at a time, so a caller
+// asking for n <= capacity always eventually gets them as holders finish.
+// Collecting slots concurrently would let two callers each hold part of the
+// budget and deadlock waiting for the rest.
+func acquire(ctx context.Context, gate, sem chan struct{}, n int) bool {
+	select {
+	case gate <- struct{}{}:
+	case <-ctx.Done():
+		return false
+	}
+	defer func() { <-gate }()
+
+	for i := 0; i < n; i++ {
+		select {
+		case sem <- struct{}{}:
+		case <-ctx.Done():
+			release(sem, i)
+			return false
+		}
+	}
+	return true
+}
+
+// release returns n slots.
+func release(sem chan struct{}, n int) {
+	for i := 0; i < n; i++ {
+		<-sem
+	}
 }
 
 // runCase starts one run and, unless Async, polls it to completion.
@@ -292,7 +372,41 @@ func (r *Runner) runCase(ctx context.Context, c ResolvedCase) runResult {
 		}
 		res.Err = err
 	}
+
+	// We have stopped watching, so stop the work: otherwise a cancelled or
+	// timed-out run keeps a VM or device busy for its full duration, which is
+	// what every other kind avoids (internal/saucecloud/cloud.go).
+	if res.TimedOut || res.Interrupted {
+		r.stopRun(res.Run, c)
+	}
 	return res
+}
+
+// stopRun asks the service to stop every job of a run we are no longer
+// waiting for. Errors are ignored, as they are for the other kinds: a job may
+// already have ended, or be in a state that cannot be stopped, and either way
+// there is nothing to do about it.
+func (r *Runner) stopRun(run Run, c ResolvedCase) {
+	if r.Stopper == nil {
+		return
+	}
+	// The caller's context is already cancelled on Ctrl-C, so stopping needs
+	// one that outlives it. This mirrors the localCtx in saucecloud, whose
+	// comment says it exists so jobs are not left abandoned.
+	stopCtx, cancel := context.WithTimeout(context.WithoutCancel(context.Background()), stopJobTimeout)
+	defer cancel()
+
+	for _, j := range run.Jobs {
+		if j.SauceJobID == "" {
+			continue
+		}
+		log.Info().
+			Str("suite", c.Suite.Name).
+			Str("testCase", c.TestCase.Name).
+			Str("job", j.SauceJobID).
+			Msg("Attempting to stop job...")
+		_, _ = r.Stopper.StopJob(stopCtx, j.SauceJobID, j.RealDevice())
+	}
 }
 
 // pollRun polls the run until every job has an outcome, the suite timeout
@@ -431,13 +545,13 @@ func (r *Runner) logResult(res runResult) {
 		msg = "Run was not started: interrupted."
 	case res.Interrupted:
 		ev = log.Warn()
-		msg = "Interrupted locally; the run continues on Sauce Labs. Check it with: " + checkHint
+		msg = "Interrupted; stopping the run on Sauce Labs. Check it with: " + checkHint
 	case res.Err != nil:
 		ev = log.Error().Err(res.Err)
 		msg = "Run failed."
 	case res.TimedOut:
 		ev = log.Error()
-		msg = "Timed out waiting; the run may still be going on Sauce Labs. Check it with: " + checkHint
+		msg = "Timed out waiting; stopping the run on Sauce Labs. Check it with: " + checkHint
 	case r.Async:
 		msg = "Run started (async). Check it with: " + checkHint
 	case !res.Run.Passed():
