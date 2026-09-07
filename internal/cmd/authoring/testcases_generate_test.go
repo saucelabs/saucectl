@@ -108,19 +108,29 @@ func TestWatchGeneration_TransientPollErrorIsRetriedThenReported(t *testing.T) {
 	// A plain error could be propagation lag, so it is retried; when it never
 	// clears, the wait ends on the cause rather than on a misleading "still
 	// running", and the caller's deadline bounds the retrying.
+	// The deadline is driven by the fake rather than the wall clock: an
+	// earlier version of this test asserted a poll count inside 50ms and
+	// failed under parallel load.
 	boom := errors.New("boom")
 	calls := 0
+	deadline, expire := context.WithCancel(context.Background())
+	defer expire()
 	svc := &mocks.AuthoringService{GenerationStatusFn: func(context.Context, string) (authoring.GenerationState, error) {
 		calls++
+		if calls == 3 {
+			expire()
+		}
 		return authoring.GenerationState{}, boom
 	}}
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	defer cancel()
+	// A cancelled context means "the user stopped us", which reports the
+	// context error; the deadline case is what reports the poll failure, so
+	// wrap the cancellation as a deadline for this assertion.
+	ctx := deadlineContext{deadline}
 	_, err := watchGeneration(ctx, svc, "task", time.Millisecond, &bytes.Buffer{}, false)
 	if !errors.Is(err, boom) {
-		t.Fatalf("err = %v; the cause must survive", err)
+		t.Fatalf("err = %v; a deadline reached while polls keep failing must report the failure", err)
 	}
-	if calls < 2 {
+	if calls != 3 {
 		t.Errorf("polled %d time(s); a transient error should be retried", calls)
 	}
 }
@@ -158,4 +168,17 @@ func TestFormatGenerationStep(t *testing.T) {
 	if got := formatGenerationStep(s); got != "✗ click css=#a  (element not interactable)" {
 		t.Errorf("failure: %q", got)
 	}
+}
+
+// deadlineContext reports cancellation as a deadline, so a test can drive the
+// "our own deadline expired" path without waiting on a real clock. It must
+// stay indistinguishable from a live context until the cancellation actually
+// happens, or the code under test sees an expired context on its first look.
+type deadlineContext struct{ context.Context }
+
+func (d deadlineContext) Err() error {
+	if d.Context.Err() != nil {
+		return context.DeadlineExceeded
+	}
+	return nil
 }

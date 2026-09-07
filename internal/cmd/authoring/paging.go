@@ -25,6 +25,12 @@ type pageFlags struct {
 	// the only way to tell an explicit value from the default when deciding
 	// whether to warn that --all cannot honour it.
 	limitChanged bool
+	// jsonOut suppresses advisory warnings. The logger writes to stdout for
+	// every saucectl command, so a warning emitted while rendering JSON
+	// lands in the middle of the document and breaks `| jq`. Silence is
+	// wrong in general (Constitution VIII), which is why this only applies
+	// to advice the user cannot act on mid-listing.
+	jsonOut bool
 }
 
 // bind registers the flags.
@@ -38,6 +44,8 @@ func (p *pageFlags) bind(fs *pflag.FlagSet) {
 // Call it from RunE, before fetching.
 func (p *pageFlags) capture(fs *pflag.FlagSet) {
 	p.limitChanged = fs.Changed("limit")
+	out, err := fs.GetString("out")
+	p.jsonOut = err == nil && out == JSONOutput
 }
 
 // validate rejects negative values before any request.
@@ -69,7 +77,7 @@ func fetchPage[T any](ctx context.Context, p pageFlags, resource string, fetch f
 
 	// --all fetches whole pages at a fixed size, so --limit cannot be
 	// honoured. Say so rather than ignoring it silently (Constitution VIII).
-	if p.limitChanged {
+	if p.limitChanged && !p.jsonOut {
 		log.Warn().Msgf("--limit is ignored with --all; every %s is fetched in pages of %d.", resource, authoring.DefaultPageSize)
 	}
 
@@ -79,7 +87,7 @@ func fetchPage[T any](ctx context.Context, p pageFlags, resource string, fetch f
 		// `--all --skip 100` does not silently restart from the beginning.
 		opts.Skip += p.skip
 		l, err := fetch(ctx, opts)
-		if err == nil && !warned && l.Total > largeListingThreshold {
+		if err == nil && !warned && !p.jsonOut && l.Total > largeListingThreshold {
 			warned = true
 			log.Warn().Msgf("Fetching all %d %s; large listings take a while and transfer several megabytes.", l.Total, resource)
 		}

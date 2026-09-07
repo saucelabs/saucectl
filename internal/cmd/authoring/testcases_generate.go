@@ -263,24 +263,33 @@ func waitForGeneration(ctx context.Context, taskID string, interval, timeout tim
 		// must not tell the user to keep polling. Either way the cause is
 		// wrapped with %w so callers can match the service's sentinels.
 		if isAbandonedWait(err) {
+			// Whatever the format, the caller needs the task id to reattach:
+			// in text it is the printed hint, in JSON it is the emitted
+			// object, and it is in the error either way.
 			if out == TextOutput {
 				fmt.Fprintf(stdout, "\n%s. Check progress with: saucectl authoring testcases generate-status %s --wait\n", ErrGenerationStillRunning, taskID)
+			} else {
+				_ = renderGenerationJSON(taskID, state)
 			}
-			return fmt.Errorf("%w: %w", ErrGenerationStillRunning, err)
+			return fmt.Errorf("%w: task %s: %w", ErrGenerationStillRunning, taskID, err)
 		}
 		return fmt.Errorf("failed to follow generation task %s: %w", taskID, err)
 	}
 
+	// The payload comes first so a script has it either way, but the task's
+	// own status decides the exit code in both formats: returning nil here
+	// for a FAILED task made `--wait -o json` exit 0 and broke CI gating.
 	if out == JSONOutput {
-		return renderJSON(struct {
-			TaskID string `json:"taskId"`
-			authoring.GenerationState
-		}{TaskID: taskID, GenerationState: state})
+		if err := renderGenerationJSON(taskID, state); err != nil {
+			return err
+		}
 	}
 
 	switch state.Status {
 	case authoring.GenerationCompleted:
-		fmt.Fprintf(stdout, "\nGeneration completed. New test case: %s\nInspect it with: saucectl authoring testcases get %s --show-steps\n", state.TestCaseID, state.TestCaseID)
+		if out == TextOutput {
+			fmt.Fprintf(stdout, "\nGeneration completed. New test case: %s\nInspect it with: saucectl authoring testcases get %s --show-steps\n", state.TestCaseID, state.TestCaseID)
+		}
 		return nil
 	case authoring.GenerationFailed:
 		if state.Error != nil {
@@ -290,6 +299,16 @@ func waitForGeneration(ctx context.Context, taskID string, interval, timeout tim
 	default:
 		return fmt.Errorf("generation ended in unexpected status %q", state.Status)
 	}
+}
+
+// renderGenerationJSON emits the one final object a JSON-mode wait produces.
+// It always carries the task id, which is what makes an abandoned wait
+// reattachable without parsing prose.
+func renderGenerationJSON(taskID string, state authoring.GenerationState) error {
+	return renderJSON(struct {
+		TaskID string `json:"taskId"`
+		authoring.GenerationState
+	}{TaskID: taskID, GenerationState: state})
 }
 
 // isAbandonedWait reports whether the wait ended because we stopped waiting
@@ -333,7 +352,13 @@ func watchGeneration(ctx context.Context, svc authoring.TestCaseService, taskID 
 		case err == nil:
 			last, lastErr, firstTransientAt = state, nil, time.Time{}
 		case ctx.Err() != nil:
-			return last, ctx.Err()
+			// The wait ended at the same moment this poll failed. Route it
+			// through the same decision as every other exit so a deadline
+			// reached while polls were failing still reports the failure.
+			if err != nil {
+				lastErr = err
+			}
+			return last, pollDeadlineError(ctx, lastErr)
 		case authoring.IsFatalPollError(err):
 			return last, err
 		default:
@@ -383,13 +408,17 @@ func watchGeneration(ctx context.Context, svc authoring.TestCaseService, taskID 
 	}
 }
 
-// pollDeadlineError decides what a finished wait actually failed on. When the
-// last poll succeeded, the task really is still running and the context error
-// is the truth. When every poll up to the deadline was failing, that failure
-// is the truth and reporting "still running" would send the user back to
-// re-poll something broken.
+// pollDeadlineError decides what a finished wait actually failed on.
+//
+// If the user interrupted us, that is the truth regardless of what the last
+// poll did: they chose to stop, the task is most likely still running, and
+// the reattach hint is what they need. If instead our own deadline expired
+// while every poll was failing, that failure is the truth — reporting "still
+// running" there would send someone back to re-poll something broken, which
+// is the defect this whole path was reported for. A successful last poll
+// always means the task really is still going.
 func pollDeadlineError(ctx context.Context, lastErr error) error {
-	if lastErr != nil {
+	if lastErr != nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return lastErr
 	}
 	return ctx.Err()

@@ -3,6 +3,7 @@ package authoring
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -108,6 +109,15 @@ func buildCreateScheduleOptions(f scheduleFlags, callerID string) (authoring.Cre
 	// no safe default to fall back to.
 	if f.timezone == "" {
 		return opts, errors.New("--timezone is required: an IANA region/city zone such as Europe/Berlin (the service does not accept \"UTC\")")
+	}
+	// Observed 2026-09-06: the service's accepted list is region/city zones
+	// only and contained neither of these, so catch them here rather than
+	// spending a round trip on an INVALID_BODY. Anything else is left to the
+	// service, which holds the real list; a local tzdata check would not help
+	// because Go itself accepts "UTC".
+	switch strings.ToLower(f.timezone) {
+	case "utc", "etc/utc":
+		return opts, fmt.Errorf("--timezone %q is not accepted by the service; use an IANA region/city zone, e.g. Atlantic/Reykjavik for a zero offset", f.timezone)
 	}
 	if f.maxRuns < 0 {
 		return opts, errors.New("--max-runs must not be negative")

@@ -16,6 +16,17 @@ import (
 // 2026-09-06, research Open-4).
 var unsettableFields = []string{"tunnelName", "buildName", "startDate", "endDate", "maxRuns"}
 
+// unsetConflicts maps each unsettable field to the flag that sets it, so
+// asking for both in one command can be refused rather than silently
+// resolved in favour of whichever runs last.
+var unsetConflicts = map[string]string{
+	"tunnelName": "tunnel-name",
+	"buildName":  "build",
+	"startDate":  "start-date",
+	"endDate":    "end-date",
+	"maxRuns":    "max-runs",
+}
+
 // scheduleUpdateFlags are the flags of `schedules update`.
 type scheduleUpdateFlags struct {
 	scheduleFlags
@@ -153,6 +164,14 @@ func buildUpdateScheduleOptions(changed interface{ Changed(string) bool }, f sch
 		v := f.build
 		settings.BuildName = &v
 		touch()
+	}
+
+	// Setting and clearing the same field in one invocation is ambiguous.
+	// The unset loop runs last, so it used to win silently; say so instead.
+	for _, field := range f.unset {
+		if flag, ok := unsetConflicts[field]; ok && changed.Changed(flag) {
+			return opts, fmt.Errorf("--%s and --unset %s conflict: pick one", flag, field)
+		}
 	}
 
 	for _, field := range f.unset {
