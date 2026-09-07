@@ -469,3 +469,30 @@ func TestAuthoringService_UpdateScheduleSendsNullToClear(t *testing.T) {
 		t.Error("buildName must be omitted when not being changed")
 	}
 }
+
+func TestAuthoringService_RunTestSuiteOmitsUnsetBuildName(t *testing.T) {
+	// Probed 2026-09-07: the endpoint accepts an omitted buildName, so the
+	// explicit null it used to send was unnecessary and inconsistent with
+	// RunOptions on the test-case run endpoint.
+	var bodies []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		bodies = append(bodies, string(b))
+		writeJSON(w, 200, `{"data":{"id":"s","runCount":2,"buildName":"x - 1"}}`)
+	}))
+	defer srv.Close()
+
+	c := newTestAuthoringService(srv)
+	if _, err := c.RunTestSuite(context.Background(), "suite", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.RunTestSuite(context.Background(), "suite", "nightly"); err != nil {
+		t.Fatal(err)
+	}
+	if bodies[0] != `{}` {
+		t.Errorf("unset build name sent %s, want {}", bodies[0])
+	}
+	if bodies[1] != `{"buildName":"nightly"}` {
+		t.Errorf("set build name sent %s", bodies[1])
+	}
+}

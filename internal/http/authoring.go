@@ -437,12 +437,12 @@ func (c *AuthoringService) DeleteTestSuite(ctx context.Context, id string, delet
 // RunTestSuite implements authoring.TestSuiteService.
 func (c *AuthoringService) RunTestSuite(ctx context.Context, id, buildName string) (authoring.SuiteRun, error) {
 	var out authoring.SuiteRun
+	// Omitted when unset, matching RunOptions on the test-case run endpoint.
+	// Sending an explicit null here was never asked for by the API and never
+	// verified, unlike scTunnelName, where a null is load-bearing.
 	body := struct {
-		BuildName *string `json:"buildName"`
-	}{}
-	if buildName != "" {
-		body.BuildName = &buildName
-	}
+		BuildName string `json:"buildName,omitempty"`
+	}{BuildName: buildName}
 	req, err := c.newRequest(ctx, http.MethodPost, "/testsuites/"+url.PathEscape(id)+"/run", nil, body)
 	if err != nil {
 		return out, err
