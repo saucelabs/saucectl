@@ -116,12 +116,23 @@ type RunOptions struct {
 // empty TunnelName becomes an explicit null rather than an omission. See the
 // TunnelName field for why omitting is never correct.
 func (o RunOptions) MarshalJSON() ([]byte, error) {
-	type wire struct {
-		BuildName  string   `json:"buildName,omitempty"`
-		TunnelName *string  `json:"scTunnelName"`
-		Targets    []Target `json:"targets,omitempty"`
+	// The documented run body carries capabilities and nothing else per
+	// target, so isRdc is deliberately not sent even though Target holds it
+	// for the configuration surface: whether a job ran on a real device is
+	// read back from the job the service reports, not asserted by us.
+	type wireTarget struct {
+		Capabilities map[string]any `json:"capabilities"`
 	}
-	w := wire{BuildName: o.BuildName, Targets: o.Targets}
+	type wire struct {
+		BuildName  string       `json:"buildName,omitempty"`
+		TunnelName *string      `json:"scTunnelName"`
+		Targets    []wireTarget `json:"targets,omitempty"`
+	}
+	var targets []wireTarget
+	for _, t := range o.Targets {
+		targets = append(targets, wireTarget{Capabilities: t.Capabilities})
+	}
+	w := wire{BuildName: o.BuildName, Targets: targets}
 	if o.TunnelName != "" {
 		w.TunnelName = &o.TunnelName
 	}

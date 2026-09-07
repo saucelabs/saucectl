@@ -34,6 +34,7 @@ func SchedulesListCommand() *cobra.Command {
 			if err := page.validate(); err != nil {
 				return err
 			}
+			page.capture(cmd.Flags())
 			items, total, err := fetchPage(cmd.Context(), page, "schedules", func(ctx context.Context, lo authoring.ListOptions) (authoring.List[authoring.TestSchedule], error) {
 				opts.ListOptions = lo
 				return scheduleService.ListSchedules(ctx, opts)

@@ -21,6 +21,10 @@ type pageFlags struct {
 	skip  int
 	limit int
 	all   bool
+	// limitChanged records whether the user actually set --limit, which is
+	// the only way to tell an explicit value from the default when deciding
+	// whether to warn that --all cannot honour it.
+	limitChanged bool
 }
 
 // bind registers the flags.
@@ -28,6 +32,12 @@ func (p *pageFlags) bind(fs *pflag.FlagSet) {
 	fs.IntVar(&p.skip, "skip", 0, "Number of results to skip.")
 	fs.IntVar(&p.limit, "limit", 20, "Maximum number of results to return. 0 returns only the total count.")
 	fs.BoolVar(&p.all, "all", false, "Return every result, fetching all pages.")
+}
+
+// capture records flag state that cannot be read from the values alone.
+// Call it from RunE, before fetching.
+func (p *pageFlags) capture(fs *pflag.FlagSet) {
+	p.limitChanged = fs.Changed("limit")
 }
 
 // validate rejects negative values before any request.
@@ -57,8 +67,17 @@ func fetchPage[T any](ctx context.Context, p pageFlags, resource string, fetch f
 		return l.Items, l.Total, err
 	}
 
+	// --all fetches whole pages at a fixed size, so --limit cannot be
+	// honoured. Say so rather than ignoring it silently (Constitution VIII).
+	if p.limitChanged {
+		log.Warn().Msgf("--limit is ignored with --all; every %s is fetched in pages of %d.", resource, authoring.DefaultPageSize)
+	}
+
 	warned := false
 	items, err := authoring.ListAll(ctx, authoring.DefaultPageSize, func(ctx context.Context, opts authoring.ListOptions) (authoring.List[T], error) {
+		// --skip still means "start here": offset every page by it, so
+		// `--all --skip 100` does not silently restart from the beginning.
+		opts.Skip += p.skip
 		l, err := fetch(ctx, opts)
 		if err == nil && !warned && l.Total > largeListingThreshold {
 			warned = true
@@ -69,12 +88,9 @@ func fetchPage[T any](ctx context.Context, p pageFlags, resource string, fetch f
 	return items, len(items), err
 }
 
-// jobURL derives a job's dashboard link from its Sauce job identifier. The
-// service's own url field is present on only about half of jobs (research
-// R-006), so it is never relied upon.
+// jobURL derives a job's dashboard link in the region resolved for this
+// invocation. The derivation itself lives in internal/authoring so the run
+// results table and these tables cannot drift apart.
 func jobURL(sauceJobID string) string {
-	if sauceJobID == "" {
-		return ""
-	}
-	return regio.AppBaseURL() + "/tests/" + sauceJobID
+	return authoring.JobURL(regio, sauceJobID)
 }

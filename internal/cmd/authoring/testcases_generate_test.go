@@ -104,14 +104,48 @@ func TestWatchGeneration_CancelledContext(t *testing.T) {
 	}
 }
 
-func TestWatchGeneration_PollErrorIsFatal(t *testing.T) {
+func TestWatchGeneration_TransientPollErrorIsRetriedThenReported(t *testing.T) {
+	// A plain error could be propagation lag, so it is retried; when it never
+	// clears, the wait ends on the cause rather than on a misleading "still
+	// running", and the caller's deadline bounds the retrying.
 	boom := errors.New("boom")
+	calls := 0
 	svc := &mocks.AuthoringService{GenerationStatusFn: func(context.Context, string) (authoring.GenerationState, error) {
+		calls++
 		return authoring.GenerationState{}, boom
 	}}
-	_, err := watchGeneration(context.Background(), svc, "task", time.Millisecond, &bytes.Buffer{}, false)
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	_, err := watchGeneration(ctx, svc, "task", time.Millisecond, &bytes.Buffer{}, false)
 	if !errors.Is(err, boom) {
+		t.Fatalf("err = %v; the cause must survive", err)
+	}
+	if calls < 2 {
+		t.Errorf("polled %d time(s); a transient error should be retried", calls)
+	}
+}
+
+func TestWatchGeneration_FatalPollErrorReturnsImmediately(t *testing.T) {
+	// A 4xx other than 404 cannot clear by waiting, so it must not be retried.
+	forbidden := &authoring.APIError{HTTPStatus: 403, Code: "UNAUTHORIZED"}
+	calls := 0
+	svc := &mocks.AuthoringService{GenerationStatusFn: func(context.Context, string) (authoring.GenerationState, error) {
+		calls++
+		return authoring.GenerationState{}, forbidden
+	}}
+	_, err := watchGeneration(context.Background(), svc, "task", time.Hour, &bytes.Buffer{}, false)
+	if !errors.Is(err, forbidden) {
 		t.Fatalf("err = %v", err)
+	}
+	if calls != 1 {
+		t.Errorf("polled %d times; a fatal error must not be retried", calls)
+	}
+}
+
+func TestWatchGeneration_TransientRetryIsBounded(t *testing.T) {
+	// Even with an unbounded context the loop must end.
+	if maxTransientPollWindow <= 0 || maxTransientPollWindow > 5*time.Minute {
+		t.Errorf("maxTransientPollWindow = %v; want a small positive bound", maxTransientPollWindow)
 	}
 }
 

@@ -8,8 +8,10 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/briandowns/spinner"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/saucelabs/saucectl/internal/authoring"
@@ -25,6 +27,13 @@ const (
 	defaultWaitTimeout    = time.Hour + waitTimeoutMargin
 	minGenerationTimeout  = time.Minute
 	maxGenerationTimeout  = time.Hour
+	// maxTransientPollWindow bounds how long consecutive transient poll
+	// failures are tolerated before the last one is reported. Propagation
+	// lag lasts seconds; a minute of unbroken failure is the service telling
+	// us something. Bounding it here rather than relying on the caller's
+	// deadline keeps the promise that nothing waits for ever
+	// (Constitution VIII) even if a caller forgets to set one.
+	maxTransientPollWindow = time.Minute
 )
 
 // ErrGenerationStillRunning is returned when the wait ends (interrupt or
@@ -149,7 +158,7 @@ func buildGenerateOptions(f generateFlags, stdin io.Reader) (authoring.GenerateO
 	if strings.TrimSpace(f.name) == "" {
 		return opts, errors.New("--name is required")
 	}
-	if len(f.name) > 255 {
+	if utf8.RuneCountInString(f.name) > 255 {
 		return opts, errors.New("--name must be at most 255 characters")
 	}
 
@@ -165,11 +174,11 @@ func buildGenerateOptions(f generateFlags, stdin io.Reader) (authoring.GenerateO
 		return opts, errors.New("at most 20 tags are allowed")
 	}
 	for _, tag := range f.tags {
-		if len(tag) > 60 {
+		if utf8.RuneCountInString(tag) > 60 {
 			return opts, fmt.Errorf("tag %q exceeds 60 characters", tag)
 		}
 	}
-	if len(f.testURL) > 2048 {
+	if utf8.RuneCountInString(f.testURL) > 2048 {
 		return opts, errors.New("--test-url must be at most 2048 characters")
 	}
 	if f.generationTimeout != 0 && (f.generationTimeout < minGenerationTimeout || f.generationTimeout > maxGenerationTimeout) {
@@ -229,7 +238,7 @@ func readIntent(intent, intentFile string, stdin io.Reader) (string, error) {
 	if intent == "" {
 		return "", errors.New("an intent is required: use --intent or --intent-file")
 	}
-	if len(intent) > 20000 {
+	if utf8.RuneCountInString(intent) > 20000 {
 		return "", errors.New("the intent must be at most 20000 characters")
 	}
 	return intent, nil
@@ -249,10 +258,17 @@ func waitForGeneration(ctx context.Context, taskID string, interval, timeout tim
 
 	state, err := watchGeneration(ctx, testCaseService, taskID, interval, render, isTerm(os.Stdout.Fd()) && out == TextOutput)
 	if err != nil {
-		if out == TextOutput {
-			fmt.Fprintf(stdout, "\n%s. Check progress with: saucectl authoring testcases generate-status %s --wait\n", ErrGenerationStillRunning, taskID)
+		// Only an abandoned wait means the task is still running. A fatal
+		// error — the task does not exist, the credentials no longer work —
+		// must not tell the user to keep polling. Either way the cause is
+		// wrapped with %w so callers can match the service's sentinels.
+		if isAbandonedWait(err) {
+			if out == TextOutput {
+				fmt.Fprintf(stdout, "\n%s. Check progress with: saucectl authoring testcases generate-status %s --wait\n", ErrGenerationStillRunning, taskID)
+			}
+			return fmt.Errorf("%w: %w", ErrGenerationStillRunning, err)
 		}
-		return fmt.Errorf("%w: %v", ErrGenerationStillRunning, err)
+		return fmt.Errorf("failed to follow generation task %s: %w", taskID, err)
 	}
 
 	if out == JSONOutput {
@@ -276,6 +292,13 @@ func waitForGeneration(ctx context.Context, taskID string, interval, timeout tim
 	}
 }
 
+// isAbandonedWait reports whether the wait ended because we stopped waiting
+// (interrupt or the local --wait-timeout) rather than because the task or the
+// service told us something. Only in that case is the task still running.
+func isAbandonedWait(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
+}
+
 // watchGeneration polls the task until it reaches a terminal status, the
 // context ends, or a poll fails. It polls first and waits after, so an
 // already-finished task returns immediately. Each step is rendered exactly
@@ -296,14 +319,42 @@ func watchGeneration(ctx context.Context, svc authoring.TestCaseService, taskID 
 	}
 
 	var last authoring.GenerationState
+	// lastErr remembers the most recent transient poll failure. If the wait
+	// then ends on its deadline, that error is the honest explanation rather
+	// than "still running": a 404 tolerated as propagation lag for one tick
+	// is a mistyped task id once it has persisted to the deadline.
+	var lastErr error
+	var firstTransientAt time.Time
 	renderedSteps, renderedReasoning := 0, 0
 
 	for {
 		state, err := svc.GenerationStatus(ctx, taskID)
-		if err != nil {
+		switch {
+		case err == nil:
+			last, lastErr, firstTransientAt = state, nil, time.Time{}
+		case ctx.Err() != nil:
+			return last, ctx.Err()
+		case authoring.IsFatalPollError(err):
 			return last, err
+		default:
+			// A freshly accepted task can 404 until its record propagates,
+			// and a truncated body fails to decode; both clear on the next
+			// tick. The wait is still bounded by ctx, so tolerating them
+			// costs nothing and matches how the runner polls a run.
+			lastErr = err
+			if firstTransientAt.IsZero() {
+				firstTransientAt = time.Now()
+			} else if time.Since(firstTransientAt) > maxTransientPollWindow {
+				return last, err
+			}
+			log.Debug().Err(err).Str("task", taskID).Msg("Transient error while polling generation task; retrying.")
+			select {
+			case <-ctx.Done():
+				return last, pollDeadlineError(ctx, lastErr)
+			case <-time.After(interval):
+			}
+			continue
 		}
-		last = state
 
 		if sp != nil {
 			sp.Stop()
@@ -326,10 +377,22 @@ func watchGeneration(ctx context.Context, svc authoring.TestCaseService, taskID 
 
 		select {
 		case <-ctx.Done():
-			return last, ctx.Err()
+			return last, pollDeadlineError(ctx, lastErr)
 		case <-time.After(interval):
 		}
 	}
+}
+
+// pollDeadlineError decides what a finished wait actually failed on. When the
+// last poll succeeded, the task really is still running and the context error
+// is the truth. When every poll up to the deadline was failing, that failure
+// is the truth and reporting "still running" would send the user back to
+// re-poll something broken.
+func pollDeadlineError(ctx context.Context, lastErr error) error {
+	if lastErr != nil {
+		return lastErr
+	}
+	return ctx.Err()
 }
 
 // formatGenerationStep renders one attempted action with its outcome mark.

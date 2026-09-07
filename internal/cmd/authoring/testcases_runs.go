@@ -34,6 +34,7 @@ func TestCasesListRunsCommand() *cobra.Command {
 			if err := page.validate(); err != nil {
 				return err
 			}
+			page.capture(cmd.Flags())
 			return listRuns(cmd.Context(), out, args[0], page, opts)
 		},
 	}

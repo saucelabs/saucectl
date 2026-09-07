@@ -46,15 +46,21 @@ func deleteTestSuite(ctx context.Context, id string, yes, deleteTestCases bool) 
 		return fmt.Errorf("failed to get test suite: %w", err)
 	}
 
+	// Only built when a prompt will actually be printed; see testcases_delete.go.
 	var affects []string
-	if deleteTestCases {
+	if yes {
+		affects = nil
+	} else if deleteTestCases {
 		affects = append(affects, fmt.Sprintf("%d test case(s) in the suite will be DELETED", s.TestCaseCount))
 	} else {
 		affects = append(affects, fmt.Sprintf("%d test case(s) in the suite will be kept and become unassigned", s.TestCaseCount))
 	}
 	limit := 20
-	schedules, err := scheduleService.ListSchedules(ctx, authoring.ListSchedulesOptions{ListOptions: authoring.ListOptions{Limit: &limit}, TestSuiteIDs: []string{s.ID}})
-	if err == nil && schedules.Total > 0 {
+	schedules := authoring.List[authoring.TestSchedule]{}
+	if !yes {
+		schedules, err = scheduleService.ListSchedules(ctx, authoring.ListSchedulesOptions{ListOptions: authoring.ListOptions{Limit: &limit}, TestSuiteIDs: []string{s.ID}})
+	}
+	if !yes && err == nil && schedules.Total > 0 {
 		for _, sch := range schedules.Items {
 			affects = append(affects, fmt.Sprintf("schedule %q (%s) triggers this suite", sch.Name, sch.ID))
 		}

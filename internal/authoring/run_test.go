@@ -95,3 +95,17 @@ func TestRunJob_RealDevice(t *testing.T) {
 		t.Error("target-level flag must count; it is the only one present early in a run")
 	}
 }
+
+func TestRunOptions_MarshalJSONSendsCapabilitiesOnly(t *testing.T) {
+	// The documented run body carries capabilities per target and nothing
+	// else; isRdc belongs to the configuration surface only.
+	opts := RunOptions{Targets: []Target{{Capabilities: map[string]any{"browserName": "chrome"}, IsRDC: true}}}
+	b, err := json.Marshal(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{"scTunnelName":null,"targets":[{"capabilities":{"browserName":"chrome"}}]}`
+	if string(b) != want {
+		t.Errorf("got  %s\nwant %s", b, want)
+	}
+}

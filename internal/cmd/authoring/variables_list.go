@@ -38,6 +38,7 @@ func VariablesListCommand() *cobra.Command {
 			if err := page.validate(); err != nil {
 				return err
 			}
+			page.capture(cmd.Flags())
 			// Unlike the other listings, the variables endpoint requires
 			// 1 <= limit <= 200 and has no count-only mode (observed: 400
 			// INVALID_QUERY "limit: Too small: expected number to be >=1").
