@@ -33,7 +33,7 @@ schema sources in `api/`. See **Project Structure** in [plan.md](./plan.md).
 ## ✅ Former blocking constraint — resolved 2026-09-05
 
 Open-1, Open-2 and Open-3 in [research.md](./research.md) were answered by three real runs of test case
-`6a882c1dc8b4482c166e96c9` in `us-west-1`:
+`6a88…` in `us-west-1`:
 
 | Open question | Answer | Effect on tasks |
 |---|---|---|

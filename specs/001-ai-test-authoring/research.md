@@ -309,7 +309,7 @@ Verified, lower-consequence, but load-bearing for specific commands:
 ## Open questions carried into implementation
 
 Open-1, Open-2 and Open-3 were **answered by observation on 2026-09-05** — three runs of test case
-`6a882c1dc8b4482c166e96c9` (a 7-step saucedemo journey, Chrome / Windows 11, `us-west-1`, ~20–25 s each).
+`6a88…` (a 7-step saucedemo journey, Chrome / Windows 11, `us-west-1`, ~20–25 s each).
 Open-4 and Open-5 remain open, each with a contained mitigation.
 
 - **Open-1 — RESOLVED: completion is reported on the run resource, and it is the *earliest* signal.**
@@ -397,6 +397,12 @@ Open-4 and Open-5 remain open, each with a contained mitigation.
 - **Run history outlives its test case.** After deleting a case, `GET /testcases/{id}/runs?testCaseId=`
   still returned its run and `GET /testcases/{id}/runs/{runId}` still resolved. Deletion orphans runs; it
   does not remove them. The delete confirmation says so.
+- **The suite-run endpoint accepts an omitted `buildName`.** Probed 2026-09-07 on a throwaway suite with
+  no members, so no jobs and no VM time: `{}`, `{"buildName": null}` and `{"buildName": "x"}` all reached
+  the same business error, `400 TEST_SUITE_NO_RUN_JOBS` ("No jobs were triggered as a part of this test
+  suite run"), rather than an `INVALID_BODY`. Omission is therefore valid, and the explicit null the
+  client used to send was unnecessary — unlike `scTunnelName` on the test-case run endpoint, where the
+  null is load-bearing (Open-3). The client now omits it, matching `RunOptions`.
 - **Code export is not deterministic.** Two consecutive exports of the same revision to
   `typescript_playwright` returned 1194 and 946 bytes of different source. Reviewers should expect diffs
   between exports; the Java export named its class `SauceDemoCartTest` and the derived filename matched.
