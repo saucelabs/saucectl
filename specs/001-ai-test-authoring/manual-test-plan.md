@@ -2,309 +2,1549 @@
 
 **Feature**: [spec.md](./spec.md) | **Quickstart**: [quickstart.md](./quickstart.md) | **Research**: [research.md](./research.md) | **Date**: 2026-09-06
 
-## Context
+## How to use this plan
 
-PR #1100 (`001-ai-test-authoring` → `main`) adds the `saucectl authoring` command group (31 commands over
-the AI Authoring API) and a `kind: authoring` runner for `saucectl run`. Automated coverage is strong
-(unit tests for client, runner and command helpers; CI green except the pre-existing `xctest` e2e job), and
-most paths were exercised once against the live service during development. Manual testing is still
-needed for three reasons:
+- Run **every** scenario, **in order**. Later parts use assets created in earlier ones.
+- Each scenario has numbered **Steps** (exact commands) and an **Expected** list. A scenario passes only
+  when every Expected item holds. Record pass / fail / not run per scenario ID.
+- Commands use shell variables for things you create along the way (`$TC`, `$SUITE`, …). Part 0 sets them
+  up; whenever a step says **Record**, export the value before moving on.
+- `a` is a shell function defined in Part 0 that stands for `./saucectl authoring --disable-usage-metrics`.
+  Pipeline scenarios spell out `./saucectl run` in full.
+- Run everything from a real terminal (not under `script`, CI or a pipe). Some scenarios deliberately pipe
+  stdin from `/dev/null` to simulate a pipeline; they say so.
+- Until the PR merges, every `./saucectl run` with this kind prints one red advisory block
+  ("value must be one of … in /kind"). That is expected and is checked explicitly in scenario 10.16.
+- Two behaviours are **known gaps** that will be fixed on the branch; the scenarios that hit them
+  (1.4 and 8.9) describe the current behaviour as the expected result. Do not file them as new defects.
 
-1. **Interactive behaviour** cannot be automated here: confirmation prompts, masked value prompts, the
-   export-target picker, the spinner, Ctrl-C mid-run.
-2. **Shared surfaces changed**: `run.go` dispatch, the root command list, and the schema bundle that every
-   kind validates against. These need a regression check by a human, not just unit tests.
-3. **Live-service behaviours** were verified once by one person. A second pair of eyes, on a different
-   machine and account, is the point of a manual pass.
-
-Writing this plan surfaced two code follow-ups (see **Known gaps**); they are recorded here so testers do
-not report them as new, and they will be fixed on the branch separately.
-
-## Impact analysis: what changed and what it can break
-
-| Change | Files | User-visible impact | Regression risk |
-|---|---|---|---|
-| New command group | `internal/cmd/authoring/*`, `cmd/saucectl/saucectl.go` | 31 new commands under `saucectl authoring`; root help gains one entry | Root registration only; other groups untouched |
-| New run kind | `internal/authoring/*`, `internal/cmd/run/authoring.go`, `internal/cmd/run/run.go` | `kind: authoring` configs run; one new `if` in the dispatch chain | Other kinds dispatch through the same chain; an ordering mistake would misroute |
-| Schema | `api/global.schema.json`, `api/v1alpha/framework/authoring.schema.json`, `api/saucectl.schema.json` | `kind` enum gains `authoring`; new branch. **Every kind's advisory validation reads this bundle once merged** | A malformed bundle would print spurious validation errors for cypress/playwright/etc. |
-| HTTP client | `internal/http/authoring.go` | New client with its own retry policy | Does not touch the shared client; `NewRetryableClient` unchanged |
-| Fixture | `.sauce/authoring.yml` | Runnable sample config | None |
-| CI / Makefile | `.github/workflows/test.yml`, `Makefile` | CI binaries now carry a real version; `make schema` uses `cd` | Already observed working in PR CI ("Running version v0.0.0+1788be91") |
-| Spec-kit + skills | `.specify/`, `.claude/skills/`, `specs/` | Repository tooling and docs | No runtime impact; out of scope here |
-
-## Preconditions
-
-| Need | Why | Notes |
-|---|---|---|
-| Binary built from the branch | all scenarios | `git fetch origin 001-ai-test-authoring && git checkout 001-ai-test-authoring && make build` → `./saucectl` |
-| Credentials for an org **with** the AI authoring entitlement | everything except A3 | `saucectl configure` or `SAUCE_USERNAME`/`SAUCE_ACCESS_KEY`. The reference org (us-west-1) holds ~186 cases |
-| Credentials for an org **without** the entitlement | A3 only | Optional but valuable; skip if unavailable and record "not run" |
-| A real terminal (TTY) for stdin and stdout | prompts, spinner, Ctrl-C | Do not run those scenarios under `script`, CI or a pipe |
-| A running Sauce Connect tunnel | D4, J16 | Optional; mark "not run" if none |
-| Real-device access | J18 | Optional; no authored real-device test case exists today |
-| `jq` | JSON assertions | Any recent version |
-
-**Rules of engagement.** Create your own assets and delete them at the end. Name everything
-`manual-<initials>-<yyyymmdd>-…` (variables: `manual_<initials>_…`, lowercase and underscores only) so
-leftovers are findable. Author tests against `https://www.saucedemo.com` only. Never delete, rename or
-re-suite a test case you did not create. Variables at `team` scope unless a row says otherwise. Pass
-`--disable-usage-metrics` to keep analytics clean. Until the PR merges, every `saucectl run` with this kind
-prints one red advisory line ("value must be one of … in /kind"); that is expected (J19).
-
-**Known service facts to keep in mind** (from research.md): run completion appears on the run resource
-~20 s after start; build names come back as `"<name> - 1"`; `UTC` is not a valid schedule timezone;
-schedule cron has six fields with seconds first; variables listing needs `--limit` 1–200 while test cases,
-suites and schedules accept `--limit 0` as count-only; run history
-outlives a deleted test case; code export output differs between calls; a suite's `testCaseCount` in a
-create/update response can lag behind the change.
-
-## Known gaps found while writing this plan
-
-These are real and will be fixed on the branch; test them as described and do not file them again.
-
-| Gap | Where | Effect | Row |
-|---|---|---|---|
-| Dynamic shell completion for `testcases code --target` returns nothing: cobra runs no pre-run hooks during completion, so the service client is never initialised and the completion function bails out | `internal/cmd/authoring/testcases_code.go` | `--target <TAB>` offers no values. Static completions for `--scope` and `--state` are unaffected | H9 |
-| Bad credentials read as "the current user has no organisation": the shared user lookup does not check the HTTP status, so a 401 body decodes to an empty user | `internal/http/userservice.go`, `internal/authoring/entitlement.go` | The message is still a "could not verify" error, distinct from "not in your plan", but the reason given is imprecise | A4 |
-
-## Legend
-
-- **Priority**: P1 = must pass before merge; P2 = should pass; P3 = nice to have / optional environment.
-- **Coverage**: `unit` = unit-tested; `live` = exercised once against the live service during development;
-  `manual-only` = only a person can verify this. Focus effort on `manual-only` and P1.
-- Placeholders: `<TC>` = the test case you author in B1; `<TC2>` = the second one from B5; `<SUITE>` from
-  E1; `<SUITE2>` = an empty second suite created in F6; `<SUITE3>` = a suite sharing `<SUITE>`'s exact name,
-  created and deleted inside J5; `<SCHED>` from F2; `<VAR>`, `<VAR2>` from the G group.
-- **Sequencing that matters**: E1 before C1 and B12; F2 before E6; F6 before E10; J5 and J6 before E9
-  (which deletes `<SUITE>`); E2 renames `<SUITE>`, so later rows use its *current* name.
-- Every command below is `./saucectl authoring --disable-usage-metrics …` unless it starts with `./saucectl run`.
+Time: about a working day for everything, including roughly ten authoring sessions and ten pipeline runs
+of ~30 s of VM time each.
 
 ---
 
-## A. Access, entitlement and region
+## Part 0 — Setup
 
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| A1 | Help needs no network | Disconnect network or set bogus creds, run `authoring --help`, `authoring testcases --help` | Help renders; no entitlement error, no delay | P1 | live |
-| A2 | Entitled org proceeds | `testcases list --limit 1` | One row, footer `showing 1 of N test cases` | P1 | live |
-| A3 | Not in plan is a distinct message | Use creds of an org without the entitlement: `testcases list`; also `./saucectl run -c <any authoring cfg> --dry-run` | Both say AI Test Authoring is **not included in your plan** and name the account team; no mention of credentials | P1 | unit |
-| A4 | Bad credentials is a distinct message | `SAUCE_ACCESS_KEY=wrong testcases list` | Error begins **could not verify AI authoring entitlement** and ends "the current user has no organisation" (the 401 body is `{"detail":"Authorization failed"}`, which the shared user lookup decodes as an empty user — see Known gaps); it must **not** say "not in your plan" | P1 | unit / live (401 body verified) |
-| A5 | No credentials | Unset the env vars and move `~/.sauce/credentials.yml` aside; `testcases list` | Error names `saucectl configure` and the two env vars | P2 | manual-only |
-| A6 | Region before and after subcommand | `-r eu-central-1 testcases list --limit 1`; `testcases list --limit 1 -r eu-central-1`; `-r us-east-4 …` | All work; totals differ per DC (reference: 186 / 38 / 2) | P2 | live |
-| A7 | Invalid region | `-r mars testcases list` | `invalid region "mars"; options: us-west-1, us-east-4, eu-central-1` | P2 | live |
+### 0.1 Build the binary from the branch
 
-## B. Authoring from the terminal
+```bash
+git fetch origin 001-ai-test-authoring
+git checkout 001-ai-test-authoring
+make build
+./saucectl --version
+```
 
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| B1 | Author with `--wait` on a TTY | `testcases generate --name "manual-<i>-login" --intent "Open https://www.saucedemo.com, log in with username standard_user and password secret_sauce, and verify the Products heading is visible." --test-url https://www.saucedemo.com --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' --tag manual-<i> --wait` | "Generation task accepted" with Task ID and Sauce job ID; a spinner while queued/in progress; `* <reasoning title>` and `✓ <action>` lines appear, each exactly once, as the agent works; ends with `Generation completed. New test case: <TC>` and the inspect hint; exit 0. Observed duration ≈ 50 s | P1 | unit (rendering) / manual-only (live streaming, spinner) |
-| B2 | Interrupt the wait | Repeat B1 with a new name; press Ctrl-C after ~10 s | "Waiting for any in-progress actions to stop…", then `generation is still running on Sauce Labs. Check progress with: … generate-status <task> --wait`, then `Error: … context canceled`; exit 1; a second Ctrl-C is not needed | P1 | live |
-| B3 | Reattach | `testcases generate-status <task from B2> --wait` | Streams whatever is still pending, or reports completion at once; prints the new test case ID and inspect hint; exit 0 | P1 | live |
-| B4 | Snapshot without waiting | `generate-status <task>` and `generate-status <task> -o json` | One-shot status. COMPLETED shows the new ID and hint and **no steps** (the service returns none at that status); JSON is one object | P2 | live |
-| B5 | Fire-and-forget authoring | B1 with a new name and without `--wait` | Prints task ID, Sauce job ID and the `generate-status … --wait` hint; exit 0. Wait for completion via B4 before using the result as `<TC2>` | P2 | unit |
-| B6 | JSON while waiting | B1 with a new name, `-o json --wait` | No "accepted" header, no streamed lines; exactly one final JSON object with `taskId`, `status`, `testCaseId` | P2 | unit |
-| B7 | Authoring that fails | Intent "Open https://www.saucedemo.com and click the button labelled 'Purple Elephant'", `--max-steps 6 --wait` | Either the task ends FAILED — then `generation failed: <code>: <detail>` and exit 1 — or it completes with a ✗ step and a saved case. Record which; both are acceptable, a hang or a silent exit 0 without a case is not | P2 | manual-only |
-| B8 | Local wait shorter than the task | B1 with a new name and `--wait-timeout 10s` | After ~10 s: the still-running message with the reattach hint; exit 1; the task continues (confirm with B4) | P2 | unit |
-| B9 | Input validation, no request sent | Omit `--name`; omit intent; give both `--intent` and `--intent-file`; omit target; two `--target`s; `--generation-timeout 30s`; `--max-steps 500`; 21 `--tag`s | Each rejected immediately with a precise message naming the flag and the bound | P2 | unit |
-| B10 | Intent from stdin and file | `echo "…" \| … --intent-file -`; `--intent-file intent.txt` | Accepted, surrounding whitespace trimmed; `--intent-file -` on a TTY with nothing piped is refused | P3 | unit |
-| B11 | Unknown task | `generate-status 00000000000000000000000000000000` | `(HTTP 404) TEST_CASE_GENERATION_TASK_NOT_FOUND: Test case generation task not found.`, answered as fast as any other request | P2 | live (endpoint) |
-| B12 | Author straight into a suite | After E1 and after J5/J6 (an extra member would change their expected counts): B5 with a new name and `--test-suite-id <SUITE>` | The new case's `Suite` column shows `<SUITE>`; `testcases list --test-suite-id <SUITE>` includes it | P2 | manual-only |
+**Expected**
+- `./saucectl` exists. The version prints `saucectl version 0.0.0+unknown` (local builds are never stamped;
+  this is normal).
 
-## C. Inspecting test cases
+### 0.2 Credentials and entitlement
 
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| C1 | Filters (after E1) | `list --search manual`; `--tag manual-<i>`; `--user-id $(get <TC> -o json \| jq -r .creatorUserId)`; `--start-date <today>T00:00:00Z`; `--test-suite-id <SUITE>` | Each narrows correctly. Tags are case-sensitive: `--tag Login` and `--tag login` differ. `--test-suite-id null` lists the unassigned cases (reference org: 119, which with the 67 cases inside suites adds up to the 186 total) | P1 | live |
-| C2 | Pagination | `list --limit 2`; `--skip 2 --limit 2`; `--all` | Disjoint pages. `--all` fetches everything; the "large listing" warning fires only above 200 total, so in the reference org (~186) expect **no** warning | P2 | live |
-| C3 | Count only | `list --limit 0 -o json` | `{"items":[],"total":N}` | P2 | live |
-| C4 | Detail and steps | `get <TC>`; `get <TC> --show-steps`; `get <TC> --revision <id from the Revision row>`; `--revision bogus` | Property table; a **Reasoning:** block with the agent's titled paragraphs; then a step table with one readable line per action, ✔/✖, a 32-hex screenshot ID (never a URL) and a truncated per-step reason. Bogus revision → `test case … has no revision bogus` | P1 | live |
-| C5 | Empty stored tunnel shown honestly | `get 6a6b903c0405fb400076b2ba` (a colleague's case that still stores `""`; read-only) | Tunnel row reads `"" (empty; cleared automatically on run)` | P3 | unit |
-| C6 | Tags list | `list-tags` | Distinct tags with case preserved (`Login` and `login` both appear) | P2 | live |
-| C7 | Run listing is scoped (SC-002) | After D1: `list-runs <TC> -o json \| jq -r '[.items[].testCaseId]\|unique'` | Exactly `["<TC>"]` | P1 | live |
-| C8 | Run detail | `get-run <TC> <run-id>` | Property table plus a jobs table whose URL is `https://app.saucelabs.com/tests/<sauceJobId>`; the link opens the job | P1 | live |
-| C9 | JSON mirrors text | Any listing or detail with `-o json` | Valid JSON with the same records as text | P2 | live |
-| C10 | Empty result | `list --search zzzz-nothing` | Single line `No test cases found (total: 0).`, no table frame | P2 | live |
-| C11 | Not found is fast | `time … get 000000000000000000000000` | 404 with `TEST_CASE_NOT_FOUND` and detail; wall time ≈ three requests (two for the entitlement gate, one lookup), well under 5 s | P1 | live |
-| C12 | Unknown output format | `list -o yaml` | Rejected before any request | P3 | unit |
-| C13 | Rename (FR-016) | `rename <TC> "manual-<i>-renamed"`; `get <TC>`; `rename <TC> "$(printf 'x%.0s' {1..300})"` | Renamed and confirmed; the 300-character name is rejected by the service with `INVALID_BODY` naming `name` (record the exact message) | P1 | live (rename) / manual-only (bound) |
-| C14 | Run listing filters and paging | After several runs: `list-runs <TC> --limit 1`; `--skip 1 --limit 1`; `--all`; `--start-date <today>T00:00:00Z`; `--user-id <yours>` | Disjoint pages, correct totals, filters narrow; every row's `testCaseId` is `<TC>` | P2 | live (basic) / manual-only (filters) |
-| C15 | Run detail enforces its test case | `get-run <TC2> <a run id of TC>` | 404 `TEST_CASE_RUN_NOT_FOUND`: the detail endpoint, unlike the list, does check the path's test case (research R-004) | P3 | live (research) |
+You need an account in an organisation that has the AI authoring entitlement. Either run `./saucectl configure`
+or export `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY`.
 
-## D. Running a single test case from the CLI
+```bash
+./saucectl authoring --disable-usage-metrics testcases list --limit 1
+```
 
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| D1 | Stored targets | `testcases run <TC> --build manual-<i>` | `Run <id> started for test case <TC> (build "manual-<i> - 1")`, a jobs table with the derived URL, the `get-run` hint; exit 0 immediately. ~30 s later `get-run` shows `passed (1/1)` | P1 | live |
-| D2 | Key=value target | `run <TC> --target 'browserName=firefox,platformName="Windows 11",browserVersion=latest'` | Accepted; the job target shows firefox; `get-run` reaches a terminal state (pass or fail — record which, the case was authored on Chrome) | P1 | unit (parsing) / manual-only (service) |
-| D3 | JSON target from file | `t.json` = `{"browserName":"chrome","platformName":"Windows 11","sauce:options":{"screenResolution":"1280x1024"}}`; `run <TC> --target-json @t.json` | Accepted; `get-run -o json` shows the nested `sauce:options` in the job target | P2 | unit (parsing) / manual-only (service) |
-| D4 | Tunnel by name | With a live tunnel: `run <TC> --tunnel-name <name>`; then with a made-up name | Live name accepted; made-up name → `SC_TUNNEL_NOT_FOUND` with the service's detail | P3 | manual-only |
-| D5 | Revision path | `run <TC> --revision <rev id from C4>` | Accepted or a clear service error — this path is described but not declared by the API; record the outcome | P3 | unit (path building) |
-| D6 | Impossible target fails visibly | `run <TC> --target browserName=chrome,browserVersion=999,platformName="Windows 11"`; poll `get-run` | Within ~10 s the job is `failed` with error `Unable to start your session.` | P2 | live |
+**Expected**
+- A one-row table and the footer `showing 1 of N test cases`. If you see "not included in your Sauce Labs
+  plan" you are in the wrong organisation.
 
-## E. Test suites
+### 0.3 Shell setup for the rest of the plan
 
-Run F2 (create a schedule on `<SUITE>`) before E6 so the delete prompt has a schedule to list. Run J5, J6
-and E10 before E9, which deletes `<SUITE>`.
+```bash
+a() { ./saucectl authoring --disable-usage-metrics "$@"; }
+export I=<your initials, lowercase, e.g. vt>
+export W=/tmp/authoring-manual && mkdir -p "$W"
+export TODAY=$(date -u +%Y-%m-%d)
+```
 
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| E1 | Create with members | `testsuites create --name manual-<i>-suite --tag manual-<i> --test-case <TC> -o json`; `testsuites get <SUITE>`; `testcases list --test-suite-id <SUITE>` | ID returned; detail shows name, tags, team and the listing hint; the listing shows `<TC>` (the `testCaseCount` in the create response may still read 0 — that lag is expected) | P1 | live |
-| E2 | Rename and retag | `update <SUITE> --name manual-<i>-suite-2 --tag a --tag b`; `get <SUITE>` | Both applied | P2 | live |
-| E3 | Incremental membership | With `<TC2>` complete: `update <SUITE> --add-test-case <TC2>`; `update <SUITE> --remove-test-case <TC>` | Listing shows exactly `<TC2>`; `get <TC>` shows `Suite -` again | P1 | live |
-| E4 | Exclusive flags and empty update | `update <SUITE> --test-case <TC> --add-test-case <TC2>`; `update <SUITE>` | Both rejected client-side, no request | P2 | live |
-| E5 | Fire-and-forget suite run | `testsuites run <SUITE> --build manual-<i>` | `Queued N run(s) for test suite … under build "manual-<i>…"` (record whether this endpoint also decorates the name with ` - 1`) plus the note that results are not followed here; exit 0. This starts real jobs for every member | P2 | manual-only |
-| E6 | **Interactive delete prompt** | TTY: `testsuites delete <SUITE>` → answer **N** | `About to delete test suite "…" (…)`, then: N test case(s) kept and becoming unassigned, and each schedule that triggers the suite (from F2); `Proceed?` defaults to No; N → `Error: aborted`, exit 1, suite still exists | P1 | manual-only |
-| E7 | Cascade warning | TTY: `testsuites delete <SUITE> --delete-test-cases` → **N** | The prompt says the N test case(s) **will be DELETED** | P1 | manual-only |
-| E8 | Non-interactive refusal | `testsuites delete <SUITE> < /dev/null` | `refusing to proceed without confirmation: not running interactively; re-run with --yes to confirm (test suite …)`; exit 1 | P1 | live |
-| E9 | Non-interactive with bypass | After the F group: `testsuites delete <SUITE> --yes` | Deleted; `<TC2>` still exists and shows `Suite -` | P1 | live |
-| E10 | Listing filters (after F6) | `testsuites list --id <SUITE> --id <SUITE2>`; `--search manual-<i>`; `--limit 0 -o json`; `schedules list --limit 0 -o json` | Exactly those two; search narrows; both count-only requests return `{"items":[],"total":N}` (suites and schedules accept `limit=0`; only variables do not) | P2 | manual-only (filters) / live (count-only) |
-
-## F. Schedules
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| F1 | Timezone required; UTC rejected | `schedules create --name manual-<i>-sched --cron "0 0 3 1 1 *" --test-suite-id <SUITE> --state disabled` (no `--timezone`); then with `--timezone UTC` | First: client error `--timezone is required …(the service does not accept "UTC")`. Second: service `INVALID_BODY` with `settings.timezone: Value must be a valid IANA timezone.` | P1 | live |
-| F2 | Create disabled, far future | Same with `--timezone Europe/Berlin --max-runs 1 --build manual-<i> -o json` | Created, `DISABLED`, `runningUserId` equals your own user ID, `nextRunDate` null | P1 | live |
-| F3 | Enable / disable | `enable <SCHED>`; `get <SCHED> -o json`; `disable <SCHED>` | State flips each time and **nothing else changes** (cron, timezone, maxRuns, buildName intact) | P1 | live |
-| F4 | Partial update keeps the rest | `update <SCHED> --cron "0 0 4 1 1 *"`; `get -o json` | Only cron changed | P1 | live |
-| F5 | Unset | `update <SCHED> --unset maxRuns --unset buildName`; `get -o json`; `update <SCHED> --unset cron` | maxRuns and buildName gone, everything else intact; `cannot unset "cron"; options: …` | P1 | live |
-| F6 | Membership | Create `<SUITE2>` first: `testsuites create --name manual-<i>-suite-b -o json` (no members needed). Then `update <SCHED> --add-test-suite-id <SUITE2>`; `--remove-test-suite-id <SUITE2>`; `--remove-test-suite-id <SUITE>` (the last one); `--test-suite-id x --add-test-suite-id y` | Add and remove applied; removing the last suite refused (`must keep at least one test suite`); wholesale + incremental rejected | P2 | unit |
-| F7 | Empty update | `update <SCHED>` | `nothing to update` | P2 | live |
-| F8 | Listing | `schedules list --test-suite-id <SUITE>`; `--id <SCHED>`; `--search manual-<i>` | Each shows `<SCHED>`; **Next Run** reads `-` while disabled | P2 | live (suite filter) / manual-only (id, search) |
-| F9 | **Interactive delete prompt** | TTY: `schedules delete <SCHED>` → **N** | Prompt states `it is DISABLED and runs "<cron>" (<tz>)` and `it triggers N suite(s): …`; N aborts, schedule remains | P1 | manual-only |
-| F10 | Non-interactive refusal / bypass | `schedules delete <SCHED> < /dev/null`; then `--yes` | Refuse (exit 1), then `Deleted schedule …` | P1 | live |
-| F11 | Observed state guard | Only if you own a schedule in `ERRORED` or `RUNNING`: `update <it> --cron …` | Error: `schedule is currently ERRORED; pass --state ENABLED or --state DISABLED to update it` | P3 | unit |
-| F12 | Unsettable state and bad cron | `create … --state running`; `create … --cron "not a cron"` | `invalid --state "running"; options: ENABLED, DISABLED` client-side; the bad cron is rejected by the service with `INVALID_BODY` naming `settings.cron` (record the wording) | P3 | unit (state) / manual-only (cron) |
-
-## G. Variables
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| G1 | Secret from env | `MY_SECRET=abc variables create --scope team --name manual_<i>_secret --secret --value-from-env MY_SECRET -o json` | Created; the JSON has **no** `value` key | P1 | unit |
-| G2 | Plain from stdin and file | `echo x \| variables create --scope team --name manual_<i>_stdin --value-from-file -`; `printf 'y\n' > v.txt; … --name manual_<i>_file --value-from-file v.txt`; `get` both | Values are exactly `x` and `y`: one trailing newline stripped | P1 | live |
-| G3 | **Masked prompt** | TTY: `variables create --scope team --name manual_<i>_prompt --secret` (no value flag) | Masked `Value:` prompt, typed characters not echoed; created | P1 | manual-only |
-| G4 | Plain prompt | Same without `--secret`, name `manual_<i>_prompt2` | Plain `Value:` prompt with visible input | P2 | manual-only |
-| G5 | `--value` warning | `create --scope team --name manual_<i>_v --secret --value abc` | Created, preceded by a WRN about shell history and the process list | P2 | live |
-| G6 | Secret never displayed | `get <VAR>`; `get <VAR> -o json`; `list --scope team --search manual_<i>` in text and JSON | `<secret>` in text; no `value` key in JSON; plain variables show their value | P1 | live |
-| G7 | Conflict detection | `get <VAR> -o json` → note `lastUpdate` T1; `update <VAR> --description one`; `update <VAR> --description two --expected-last-update T1` | Second update refused: `… was changed by someone else since it was read; re-read it with 'saucectl authoring variables get <VAR>' …`; exit 1 | P1 | live |
-| G8 | Default read-then-write | `update <VAR> --description three` | Succeeds, prints the new version token | P1 | live |
-| G9 | Toggle secrecy | `update <VAR> --secret=false`; `get`; `update <VAR> --secret=true`; `get` | Per the API docs the value moves across and becomes visible, then hidden again. Record the actual behaviour | P2 | manual-only |
-| G10 | Scope pairing | `list --scope testSuite`; `create --scope org --test-case-id x --name z --value v`; `list --scope testCase --test-case-id <TC>` | First two rejected client-side naming the missing/forbidden identifier; the third works (possibly empty) | P1 | live |
-| G11 | Limit bounds | `list --limit 0`; `--limit 201` | Both rejected: `--limit must be between 1 and 200 for variables; the service has no count-only mode` | P2 | live |
-| G12 | Non-interactive without a value; empty update | `create --scope team --name manual_<i>_none < /dev/null`; `update <VAR>` with no flags | Error listing `--value-from-env`, `--value-from-file` and `--value`; `nothing to update: specify --name, --description, --secret or a value source` | P2 | unit |
-| G13 | Delete with tokens | `delete <VAR> --yes --expected-last-update 2026-01-01T00:00:00.000Z`; then `delete <VAR> --yes` | Stale token → conflict message, exit 1; fresh default → `Deleted variable …` | P1 | live |
-| G14 | **Interactive delete prompt** | TTY: `variables delete <VAR2>` → **N**, then again → **Y** | Prompt states `it is a <secret\|plain> variable at team scope` and that tests referencing `{{team:<name>}}` will lose it; N aborts, Y deletes | P1 | manual-only |
-| G15 | Suite- and case-scoped variables | `create --scope testSuite --test-suite-id <SUITE> --name manual_<i>_s --value 1`; `create --scope testCase --test-case-id <TC2> --name manual_<i>_c --value 2`; `list --scope testSuite --test-suite-id <SUITE>`; later, after E9 deletes the suite: `get <suite var>` | Both created and listed under their scope. After the suite is deleted, record whether the suite-scoped variable still exists (unknown; both outcomes acceptable, must not be silent) | P2 | manual-only |
-| G16 | Name validation | `create --scope team --name "Bad Name" --value v` | Rejected client-side: lowercase letters, digits and underscores only | P3 | unit |
-
-## H. Export to code
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| H1 | Targets | `testcases list-code-targets <TC>` | The org's targets (reference org: nine, incl. `typescript_playwright`, `java_selenium`) | P2 | live |
-| H2 | Stdout redirect | `testcases code <TC> --target typescript_playwright > t.spec.ts` | The file is Playwright source; nothing else was written to stdout | P1 | live |
-| H3 | File, refusal, force | `code <TC> --target python_selenium -f test_login.py`; again; again with `--force` | Written; `… already exists; use --force to overwrite`; overwritten | P1 | live |
-| H4 | Directory with derived name | `code <TC> --target java_selenium -d out/` | File named after the source's `public class`, e.g. `SauceDemoLoginTest.java` | P1 | live |
-| H5 | Unavailable target | `--target cobol_thing` | Error listing the valid targets | P2 | live |
-| H6 | **Interactive target picker** | TTY: `code <TC>` (no `--target`) | A select prompt listing the targets; choosing one prints the source | P1 | manual-only |
-| H7 | Non-interactive without target | `code <TC> < /dev/null` | `--target is required; available: …` | P2 | live |
-| H8 | JSON | `code <TC> --target python_selenium -o json` | `{"target":…,"code":…}` | P3 | live |
-| H9 | Shell completion | With completion installed (`saucectl completion <shell>`): `authoring variables list --scope <TAB>`; `authoring schedules create --state <TAB>`; `authoring testcases code <TC> --target <TAB>` | `--scope` offers the four scopes and `--state` offers ENABLED/DISABLED. `--target` currently offers **nothing** — Known gap, record as such, not as a defect | P3 | manual-only |
-
-## I. Artifacts
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| I1 | Download by ID | Take a Screenshot ID from C4: `download-artifact <id> -f step.png`; open the file | `Wrote N bytes to step.png`; a PNG of the step | P1 | unit (client) / live (endpoint, during research) |
-| I2 | Download by full URL | `URL=$(get <TC> -o json \| jq -r '.revisions[-1].steps[0].screenshotUrl'); download-artifact "$URL" -f step2.png` (quotes matter: the URL contains `&`) | Same result; the identifier is extracted from the URL | P2 | unit |
-| I3 | Destination required; no overwrite | Omit `-f`; repeat with an existing file; add `--force` | `a destination is required`; `already exists; use --force`; overwritten | P2 | unit |
-| I4 | Unknown ID | `download-artifact 00000000000000000000000000000000 -f x.bin` | 404 `FILE_NOT_FOUND`, answered in one request | P2 | live (research) |
-
-## J. Pipeline runs with `kind: authoring`
-
-Start from `.sauce/authoring.yml`, point `testCases` at `<TC>` (and `<TC2>`), enable
-`reporters.junit` and set `artifacts.download.when: always`.
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| J1 | Dry run | `./saucectl run -c cfg.yml --dry-run` | `The following test cases would have run:` with one line per suite → case (id) stating stored or configured targets; nothing starts (`list-runs <TC>` count unchanged) | P1 | live |
-| J2 | Passing run | `./saucectl run -c cfg.yml` | INF `Run started` with the job URL, `Runs in progress: N` every 10 s, `Run finished`, a results table with ✔ rows, `All suites have passed`, a **Build Link** that opens, exit 0 | P1 | live |
-| J3 | Failing run | A suite with `targets: [{capabilities: {browserName: chrome, browserVersion: "999", platformName: "Windows 11"}}]` | ERR `Run finished with failures`, ✖ row `failed`, footer `1 of N suites have failed`, exit 1; JUnit `<failure message="Unable to start your session.">`; Build Link `N/A` (the job never existed) | P1 | live |
-| J4 | One row per target | One suite with two targets (chrome and firefox) | Two rows for one test case with distinct Browser cells; JUnit has two `<testcase>` elements | P1 | unit |
-| J5 | Suite by name | `testSuiteName:` set to `<SUITE>`'s **current** exact name (`manual-<i>-suite-2` after E2); then `manual` (substring); then a name two suites share (create `<SUITE3>` with exactly that same name first; delete it with `--yes` afterwards) | Exact resolves; substring → `no test suite is named "manual" (the match is exact and case-sensitive)`; duplicate → `2 test suites are named …; reference one by testSuiteId instead` | P1 | unit |
-| J6 | Suite by ID with tags | Tags can only be set at authoring time (there is no tag-edit command), so author `<TC2>` in B5 with an extra `--tag manual-<i>-only`. E3 leaves only `<TC2>` in the suite, so re-add `<TC>` first: `testsuites update <SUITE> --add-test-case <TC>`. Config: `testSuiteId: <SUITE>` plus `tags: [manual-<i>-only]` | Only `<TC2>` runs; without `tags`, both run | P2 | unit |
-| J7 | Concurrency | Three test cases in one suite, `--ccy 1`; watch the `Run started` timestamps | Runs start one after another, each after the previous finishes (~25 s apart) | P2 | unit |
-| J8 | Async | `--async` | INF `Run started (async)` with the `get-run` hint, rows `in progress`, footer `All suites have launched`, exit 0; no JUnit/JSON files written | P1 | unit |
-| J9 | JUnit has test cases (SC-008) | `grep -c '<testcase' saucectl-authoring-report.xml` after J2 | Equals the number of jobs | P1 | live |
-| J10 | JSON reporter | `--reporters.json.enabled` | `saucectl-report.json` with one entry per job | P2 | unit |
-| J11 | Artifacts | `when: always`, match `*.mp4`, `log.json`; then `when: fail` on a passing run; then `artifacts.cleanup: true` with an old file in the directory | `./artifacts/<suite_-_case>/video.mp4` and `log.json`; nothing downloaded on `fail`; cleanup empties the directory before the run | P1 | live (download) / unit (skip rules) |
-| J12 | Timeout | `defaults.timeout: 5s` | ERR `Timed out waiting; the run may still be going on Sauce Labs. Check it with: …`; the row shows ✖ with status `?`; footer counts it as failed; exit 1 | P1 | unit |
-| J13 | **Ctrl-C mid-run** | Start J2; press Ctrl-C after `Run started` | WRN `Interrupted locally; the run continues on Sauce Labs. Check it with: …`; the results table still renders (row `in progress`); exit 1; `get-run` a minute later shows the run finished. Pressing Ctrl-C **before** any `Run started` line yields `Run was not started: interrupted.` instead | P1 | manual-only |
-| J14 | Unsupported settings warn | Dry run with `--retries 2 --tags a --env X=1 --launch-order "fail rate" --show-console-log --live-logs --fail-fast` | One WRN per setting naming it as not supported for kind: authoring; the run proceeds | P1 | live |
-| J15 | Select suite | `--select-suite "<name>"`; `--select-suite nope` | Only that suite runs; `no suite named 'nope' found` | P2 | unit |
-| J16 | Tunnel | `sauce.tunnel.name: <live tunnel>`; then a dead name | Readiness check logs `Tunnel is ready!` and runs; the dead name fails **before** any run starts, after the tunnel timeout | P3 | manual-only |
-| J17 | Case with empty stored tunnel | Only with the owner's agreement: run `6a6b903c0405fb400076b2ba` (Android emulator, stores `""`) with no tunnel configured | Starts and completes because the runner sends `scTunnelName: null` (verified 2026-09-05 on another case, whose stored value was cleared by that run) | P3 | live |
-| J18 | Real device | Author a case on a real device (needs entitlement; how the service marks a target as real-device is not documented — record what works); run it | Its row lands in the RDC table with its own build link | P3 | unit |
-| J19 | Schema advisory | Before merge: any run prints the red `/kind` advisory once. After merge: gone | Matches on each side of the merge | P2 | live |
-| J20 | Build name | `--build "manual-<i>-x"`; then a 120-character build name | Jobs grouped under `manual-<i>-x - 1` in the dashboard, Build Link points at it; the long name warns and is truncated to 100 characters | P2 | live (grouping) / unit (truncation) |
-| J21 | Another data centre | Author a case with `-r eu-central-1`; config with `sauce.region: eu-central-1` | Runs there; job URL uses `app.eu-central-1.saucelabs.com` | P3 | manual-only |
-| J22 | Configuration validation | Configs with: no `suites`; a suite with no name; a suite with both `testSuiteId` and `testCases`; a suite with neither; an empty `testCases` entry; a target without `capabilities`; two suites with the same name; no `sauce.region` | Each rejected before any request with a message naming the suite and the rule | P1 | unit |
-
-## K. Regression on untouched surfaces
-
-| ID | Scenario | Steps | Expected | Pri | Coverage |
-|---|---|---|---|---|---|
-| K1 | Other kinds still validate | After merge: `./saucectl run -c .sauce/cypress-10.yml --dry-run`; `-c .sauce/playwright.yml --dry-run` | No advisory validation errors that `main` did not already print | P1 | manual-only |
-| K2 | Other kinds still dispatch | `./saucectl run -c .sauce/playwright.yml --dry-run` (before or after merge) | Runs the playwright path (bundles and validates), not `unknown framework configuration` | P1 | manual-only |
-| K3 | Root help | `./saucectl --help` | `authoring` listed once among the other groups | P2 | live |
-| K4 | Unrelated groups unaffected | `./saucectl storage list`; `./saucectl builds list vdc --size 1`; `./saucectl devices list` | Behave as on `main` | P2 | manual-only |
-| K5 | Bundle is reproducible | `make schema && git status --short api/` | No diff | P1 | live |
-| K6 | CI stamps the version | Open the PR's `build` job log | `Running version v0.0.0+<sha>`, not `0.0.0+unknown` | P2 | live (observed) |
-| K7 | `make schema` on macOS | Run `make schema` on a Mac with the default `/bin/sh` | Regenerates without a `pushd` error | P3 | manual-only |
-| K8 | Every command documents itself | `for c in $(./saucectl authoring testcases --help \| sed -n '/^Available Commands:/,/^$/p' \| awk '/^  [a-z]/{print $1}'); do ./saucectl authoring testcases $c --help \| grep -q Examples: \|\| echo "missing: $c"; done` (repeat for testsuites, schedules, variables; the `sed` keeps the Aliases line out of the loop) | Nothing printed: every leaf command has an Examples section | P3 | live |
-| K9 | Aliases | `authoring tc ls --limit 1`; `ts ls`; `schedule ls`; `var ls --scope team --limit 1`; `tc runs <TC>`; `tc tags`; `artifact --help` | All resolve to their commands | P3 | manual-only |
-
-## L. Confirmation matrix (FR-037 to FR-041)
-
-Run each cell once; the interactive cells are the manual focus. Wording is identical across rows apart
-from the asset description.
-
-| Asset | Interactive, no `--yes` | Interactive, `--yes` | Non-interactive, no `--yes` | Non-interactive, `--yes` |
-|---|---|---|---|---|
-| test case (`<TC2>` at the end) | prompt lists its suite membership if any, that its recorded runs stay in history orphaned if any, and the revision count only when there is more than one; N aborts | deletes with no prompt | refuses, exit 1 | deletes |
-| test suite | E6 / E7 | manual | E8 | E9 |
-| schedule | F9 | manual | F10 | F10 |
-| variable | G14 | manual | `delete <VAR> < /dev/null` | G13 |
+Every asset you create is named `manual-$I-…` (variables: `manual_$I_…`) so it can be found and deleted at
+the end. Never delete, rename or move a test case, suite, schedule or variable you did not create in this plan.
 
 ---
 
-## Teardown
+## Part 1 — Access and region
 
-1. `testcases list --search manual-<i>` → `delete <id> --yes` for each.
-2. `testsuites list --search manual-<i>` → `delete <id> --yes` for each (without `--delete-test-cases` unless every member is yours and already handled in step 1).
-3. `schedules list --search manual-<i>` → `delete <id> --yes` for each.
-4. `variables list --scope team --search manual_<i>` → `delete <id> --yes` for each; also the suite- and case-scoped ones from G15 if they survived.
-5. `testcases list-tags` must no longer show `manual-<i>`.
-6. Remove local `./artifacts`, report files and exported sources.
+### 1.1 Help works without any network access
 
-## Execution order and effort
+**Steps**
+1. Disconnect from the network (or `export SAUCE_ACCESS_KEY=bogus` temporarily).
+2. `a --help`
+3. `a testcases --help`
+4. `a testcases generate --help`
+5. Reconnect / restore the key.
 
-| Pass | Rows | Time |
-|---|---|---|
-| Smoke first | A1, A2, C11, J1, J2, K3, K5 | 30 min |
-| P1 core (respect the sequencing notes in the Legend) | B1–B3, C1, C4, C7, C8, C13, D1, D2, E1, E3, F1–F5, F9, F10, J5, E6–E9, G1–G3, G6–G8, G10, G13, G14, H2–H4, H6, I1, J3, J4, J8, J9, J11–J14, J22, K1, K2, L | 4–5 h |
-| P2 | remaining P2 rows (J6 and E10 before E9) | 2 h |
-| P3 / optional environment | B10, C5, C12, C15, D4, D5, F11, F12, G16, H8, H9, J16–J18, J21, K7–K9 | as available |
+**Expected**
+- All three help pages render immediately with no error and no delay. Help never triggers the entitlement
+  check.
+
+### 1.2 Entitled organisation proceeds
+
+**Steps**
+1. `a testcases list --limit 1`
+
+**Expected**
+- One row; footer `showing 1 of N test cases`.
+
+### 1.3 Region flag before and after the subcommand
+
+**Steps**
+1. `a -r eu-central-1 testcases list --limit 1 -o json | jq .total`
+2. `a testcases list --limit 1 -o json -r eu-central-1 | jq .total`
+3. `a testcases list --limit 1 -o json -r us-east-4 | jq .total`
+
+**Expected**
+- Steps 1 and 2 print the same number (the eu-central-1 total). Step 3 prints the us-east-4 total. Neither
+  equals the us-west-1 total. (Reference organisation on 2026-09-06: 186 / 38 / 2.)
+
+### 1.4 Bad credentials give a "could not verify" error, not "not in your plan"
+
+**Steps**
+1. `SAUCE_ACCESS_KEY=definitely-wrong a testcases list`
+
+**Expected**
+- Exit code 1.
+- The error starts with `could not verify AI authoring entitlement` and ends with
+  `the current user has no organisation`.
+- It does **not** contain "not included in your Sauce Labs plan".
+- **Known gap**: the second half of the message is imprecise. The service answers the user lookup with
+  `401 {"detail":"Authorization failed"}` and the shared user client does not check the status, so the
+  gate sees an empty user. Record the message as seen; it will be fixed.
+
+### 1.5 No credentials at all
+
+**Steps**
+1. `mv ~/.sauce/credentials.yml ~/.sauce/credentials.yml.bak` (skip if you use env vars)
+2. `env -u SAUCE_USERNAME -u SAUCE_ACCESS_KEY ./saucectl authoring --disable-usage-metrics testcases list`
+3. Restore: `mv ~/.sauce/credentials.yml.bak ~/.sauce/credentials.yml`
+
+**Expected**
+- Error `no credentials set; run 'saucectl configure' or set SAUCE_USERNAME and SAUCE_ACCESS_KEY`; exit 1.
+
+### 1.6 Invalid region
+
+**Steps**
+1. `a -r mars testcases list`
+
+**Expected**
+- `Error: invalid region "mars"; options: us-west-1, us-east-4, eu-central-1`; exit 1.
+
+---
+
+## Part 2 — Author test cases from the terminal
+
+All authoring targets the public demo site `https://www.saucedemo.com`.
+
+### 2.1 Author a test case and watch it happen (`--wait` on a terminal)
+
+**Steps**
+1. Run, in a real terminal:
+   ```bash
+   a testcases generate --name "manual-$I-login" \
+     --intent "Open https://www.saucedemo.com, log in with username standard_user and password secret_sauce, and verify the Products heading is visible." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --wait
+   ```
+2. Watch the output until it finishes (about a minute).
+3. **Record** the new test case ID: `export TC=<id printed on the "New test case:" line>`
+4. `export ME=$(a testcases get $TC -o json | jq -r .creatorUserId)`
+
+**Expected**
+- First lines: `Generation task accepted.`, `Task ID: …`, `Sauce job ID: …`.
+- A spinner reading `waiting for the agent...`, then `queued, 0 step(s) so far...`, then
+  `in progress, N step(s) so far...` while the agent works.
+- As steps are discovered, lines appear such as `* Entering Username` (reasoning titles) and
+  `✓ input_text css=[data-test="username"] ← standard_user` (actions). Each line appears exactly once.
+- Final lines: `Generation completed. New test case: <id>` and
+  `Inspect it with: saucectl authoring testcases get <id> --show-steps`.
+- Exit code 0.
+
+### 2.2 Interrupt the wait with Ctrl-C
+
+**Steps**
+1. Start a second authoring, this time with an extra tag that Part 10 relies on:
+   ```bash
+   a testcases generate --name "manual-$I-login-2" \
+     --intent "Open https://www.saucedemo.com, log in with username standard_user and password secret_sauce, and verify the Products heading is visible." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --tag manual-$I-only --wait
+   ```
+2. About ten seconds after "Generation task accepted", press **Ctrl-C once**.
+3. **Record** the task ID from the output: `export TASK2=<Task ID>`
+
+**Expected**
+- `Waiting for any in-progress actions to stop... (press Ctrl-c again to exit without waiting)`
+- Then: `generation is still running on Sauce Labs. Check progress with: saucectl authoring testcases generate-status <TASK2> --wait`
+- Then: `Error: generation is still running on Sauce Labs: context canceled`
+- The process exits by itself with code 1; a second Ctrl-C is not needed.
+
+### 2.3 Reattach to the interrupted task
+
+**Steps**
+1. `a testcases generate-status $TASK2 --wait`
+2. **Record**: `export TC2=<id on the "New test case:" line>`
+
+**Expected**
+- If the task is still running: the same streaming lines as 2.1 for the remaining steps. If it already
+  finished: goes straight to completion.
+- Ends with `Generation completed. New test case: <TC2>` and the inspect hint; exit 0.
+
+### 2.4 Snapshot of a task without waiting
+
+**Steps**
+1. `a testcases generate-status $TASK2`
+2. `a testcases generate-status $TASK2 -o json`
+
+**Expected**
+- Step 1: `Task <TASK2>: COMPLETED`, then `New test case: <TC2>` and the inspect hint. No steps are listed,
+  because the service returns none once a task is complete.
+- Step 2: exactly one JSON object with `"status": "COMPLETED"` and `"testCaseId": "<TC2>"`.
+
+### 2.5 Fire-and-forget authoring, then wait for it
+
+**Steps**
+1. ```bash
+   a testcases generate --name "manual-$I-login-3" \
+     --intent "Open https://www.saucedemo.com, log in with username standard_user and password secret_sauce, and verify the Products heading is visible." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I
+   ```
+2. **Record** `export TASK3=<Task ID>`.
+3. Poll `a testcases generate-status $TASK3` every 20 seconds until it reads COMPLETED.
+4. **Record** `export TC3=<New test case id>`.
+
+**Expected**
+- Step 1 returns immediately with exit 0, printing `Generation task accepted.`, the two IDs, and
+  `Check progress with: saucectl authoring testcases generate-status <TASK3> --wait`.
+- While running, step 3 prints `Task …: QUEUED` or `IN_PROGRESS` with any steps so far and
+  `Still running. Reattach with: …`; finally `COMPLETED` with the new ID.
+
+### 2.6 Intent from a file and JSON output while waiting
+
+**Steps**
+1. `printf '  Open https://www.saucedemo.com, log in with username standard_user and password secret_sauce, and verify the Products heading is visible.  \n' > $W/intent.txt`
+2. ```bash
+   a testcases generate --name "manual-$I-login-json" --intent-file $W/intent.txt \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --wait -o json | tee $W/gen.json
+   ```
+3. `jq -c '{taskId, status, testCaseId}' $W/gen.json`
+
+**Expected**
+- No "Generation task accepted" header and no streamed step lines: the only output is a single JSON
+  object, printed when the task finishes.
+- Step 3 shows `"status":"COMPLETED"` and a 24-hex `testCaseId`.
+- `a testcases get <that id>` shows the intent without the surrounding spaces (trimmed).
+
+### 2.7 Intent from standard input; refusal on a terminal
+
+**Steps**
+1. ```bash
+   echo "Open https://www.saucedemo.com and verify the login button is visible." | \
+     a testcases generate --name "manual-$I-stdin" --intent-file - \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' --tag manual-$I
+   ```
+2. In the terminal, with nothing piped: `a testcases generate --name x --intent-file - --target browserName=chrome`
+
+**Expected**
+- Step 1: accepted (task ID printed), exit 0.
+- Step 2: `Error: --intent-file - reads standard input, but standard input is a terminal`; exit 1; no request
+  made.
+
+### 2.8 Local wait shorter than the task
+
+**Steps**
+1. ```bash
+   a testcases generate --name "manual-$I-short-wait" \
+     --intent "Open https://www.saucedemo.com and verify the login button is visible." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --wait --wait-timeout 10s
+   ```
+2. Note the task ID; after a minute run `a testcases generate-status <that task>`.
+
+**Expected**
+- After about ten seconds: `generation is still running on Sauce Labs. Check progress with: …` and
+  `Error: generation is still running on Sauce Labs: context deadline exceeded`; exit 1.
+- Step 2 shows the task completed on its own: the local timeout did not cancel it.
+
+### 2.9 Authoring that cannot succeed
+
+**Steps**
+1. ```bash
+   a testcases generate --name "manual-$I-impossible" \
+     --intent "Open https://www.saucedemo.com and click the button labelled 'Purple Elephant'." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --max-steps 6 --wait
+   ```
+
+**Expected — one of two outcomes, record which**
+- The task ends FAILED: output ends with `Error: generation failed: <CODE>: <detail>` and exit 1; **or**
+- the agent gives up gracefully and saves a case: a `✗` step line appears and the run completes with a new
+  test case ID.
+- Not acceptable: hanging past the generation timeout, or exit 0 with no test case ID.
+
+### 2.10 Input validation happens before any request
+
+Run each command; each must fail immediately (well under a second) with the message shown.
+
+| Command | Expected error contains |
+|---|---|
+| `a testcases generate --intent x --target browserName=chrome` | `--name is required` |
+| `a testcases generate --name n --target browserName=chrome` | `an intent is required` |
+| `a testcases generate --name n --intent x --intent-file f --target browserName=chrome` | `mutually exclusive` |
+| `a testcases generate --name n --intent x` | `no target specified` |
+| `a testcases generate --name n --intent x --target browserName=chrome --target browserName=firefox` | `exactly one target` |
+| `a testcases generate --name n --intent x --target browserName=chrome --generation-timeout 30s` | `between 1m and 1h` |
+| `a testcases generate --name n --intent x --target browserName=chrome --max-steps 500` | `between 1 and 200` |
+| `a testcases generate --name n --intent x --target browserName=chrome $(printf -- '--tag t%s ' $(seq 1 21))` | `at most 20 tags` |
+
+### 2.11 Unknown task ID
+
+**Steps**
+1. `time a testcases generate-status 00000000000000000000000000000000`
+
+**Expected**
+- `Error: failed to get generation status: ai authoring service error (HTTP 404) TEST_CASE_GENERATION_TASK_NOT_FOUND: Test case generation task not found.`
+- Total time about the same as any other command (well under 5 s): the 404 is not retried.
+
+---
+
+## Part 3 — Inspect test cases
+
+### 3.1 Detail view and steps
+
+**Steps**
+1. `a testcases get $TC`
+2. `a testcases get $TC --show-steps`
+3. `export REV=$(a testcases get $TC -o json | jq -r '.revisions[-1].id')`
+4. `a testcases get $TC --revision $REV --show-steps`
+5. `a testcases get $TC --revision bogus`
+
+**Expected**
+- Step 1: a two-column Property/Value table with ID, Name, Tags (`manual-<I>`), Suite `-`, Created/Updated
+  with your username, Test URL `https://www.saucedemo.com/`, Tunnel `-`, Primary Target
+  `chrome latest / Windows 11`, Run Targets `-`, Revisions `1`, Revision, Intent, Discovered Intent,
+  Description, Steps `5` (or however many the agent recorded). Below the table a `Reasoning:` block with
+  the agent's titled paragraphs.
+- Step 2: the same, followed by a step table with columns `#`, `Action`, `Result`, `Screenshot`, `Reasoning`.
+  Actions read like `input_text css=[data-test="username"] ← standard_user`, `click css=[data-test="login-button"]`,
+  `assert css=[data-test="title"] toBeDisplayed`, `finish`. Result is `✔`. Screenshot is a 32-character hex
+  identifier, **never** a URL. Reasoning is one short sentence.
+- Step 4: identical to step 2.
+- Step 5: `Error: test case <TC> has no revision bogus`.
+
+### 3.2 JSON mirrors the text view
+
+**Steps**
+1. `a testcases get $TC -o json | jq -c '{id, name, tags, steps: (.revisions[-1].steps | length)}'`
+
+**Expected**
+- Valid JSON; the values match what 3.1 showed.
+
+### 3.3 Listing filters
+
+**Steps**
+1. `a testcases list --search manual-$I`
+2. `a testcases list --tag manual-$I-only -o json | jq -r '.items[].id'`
+3. `a testcases list --user-id $ME --start-date ${TODAY}T00:00:00Z -o json | jq .total`
+4. `a testcases list --tag Login -o json | jq .total` and `a testcases list --tag login -o json | jq .total`
+5. `a testcases list --test-suite-id null -o json | jq .total`
+
+**Expected**
+- Step 1: only your `manual-<I>-…` cases, footer `showing N of N test cases`.
+- Step 2: exactly `<TC2>`.
+- Step 3: at least the number of cases you authored today.
+- Step 4: the two counts differ when the organisation has both tags (it does in the reference org). Tags
+  are case-sensitive.
+- Step 5: the number of test cases that belong to no suite (reference org: 119 of 186).
+
+### 3.4 Pagination and the count-only mode
+
+**Steps**
+1. `a testcases list --limit 2 -o json | jq -r '.items[].id'`
+2. `a testcases list --skip 2 --limit 2 -o json | jq -r '.items[].id'`
+3. `a testcases list --limit 0 -o json`
+4. `a testcases list --all -o json | jq '.items | length'`
+
+**Expected**
+- Steps 1 and 2 print two IDs each, with no overlap.
+- Step 3: `{"items":[],"total":N}`.
+- Step 4: equals `N`. A warning about a large listing appears only when `N` exceeds 200 (so probably not
+  in the reference org).
+
+### 3.5 Empty result and unknown format
+
+**Steps**
+1. `a testcases list --search zzzz-nothing-here`
+2. `a testcases list -o yaml`
+
+**Expected**
+- Step 1: the single line `No test cases found (total: 0).` and no table.
+- Step 2: `Error: unknown output format "yaml"; options: text, json`; exit 1.
+
+### 3.6 Not found is answered in one request
+
+**Steps**
+1. `time a testcases get 000000000000000000000000`
+
+**Expected**
+- `Error: failed to get test case: ai authoring service error (HTTP 404) TEST_CASE_NOT_FOUND: Test case not found.`
+- Wall time comparable to a successful `get` (three requests in total: two for the entitlement gate, one
+  lookup). Several seconds would mean the 404 is being retried.
+
+### 3.7 Tags list
+
+**Steps**
+1. `a testcases list-tags`
+2. `a testcases list-tags -o json | jq 'length'`
+
+**Expected**
+- One tag per line, including `manual-<I>` and `manual-<I>-only`; case is preserved (`Login` and `login`
+  both appear if the organisation has both). Step 2 prints the count.
+
+### 3.8 A stored empty tunnel name is shown honestly
+
+**Steps**
+1. `a testcases get 6a6b903c0405fb400076b2ba | grep Tunnel`
+
+**Expected**
+- `Tunnel  "" (empty; cleared automatically on run)`. This colleague's test case stores an empty string;
+  reading it is harmless. If the row shows `-`, someone has run the case since and cleared it — record
+  "not reproducible".
+
+### 3.9 Rename
+
+**Steps**
+1. `a testcases rename $TC "manual-$I-login-renamed"`
+2. `a testcases get $TC | grep Name`
+3. `a testcases rename $TC "$(printf 'x%.0s' $(seq 1 300))"`
+
+**Expected**
+- Step 1: `Renamed test case <TC> to "manual-<I>-login-renamed".`
+- Step 2: the new name.
+- Step 3: a service error with `INVALID_BODY` naming `name` (record the exact wording); the name is
+  unchanged.
+
+---
+
+## Part 4 — Run a test case from the CLI and inspect runs
+
+### 4.1 Run with the stored target
+
+**Steps**
+1. `a testcases run $TC --build manual-$I`
+2. **Record** `export RUN1=<Run id>`.
+3. Wait 40 seconds, then `a testcases get-run $TC $RUN1`
+
+**Expected**
+- Step 1: `Run <RUN1> started for test case <TC> (build "manual-<I> - 1").` (the service appends ` - 1`),
+  a jobs table with Job, Target `chrome latest / Windows 11`, Status `in progress`, URL
+  `https://app.saucelabs.com/tests/<job>`, then `Check on it with: saucectl authoring testcases get-run <TC> <RUN1>`.
+  Exit 0 immediately.
+- Step 3: Status `passed (1/1)`; the jobs table shows `passed`. Open the URL: it is the job in the dashboard.
+
+### 4.2 Run listing is scoped to the test case
+
+**Steps**
+1. `a testcases list-runs $TC`
+2. `a testcases list-runs $TC -o json | jq -r '[.items[].testCaseId] | unique'`
+
+**Expected**
+- Step 1: a table with Run ID, Build, Jobs, Status, Created; footer `showing 1 of 1 runs`.
+- Step 2: exactly `["<TC>"]`. Any other ID here would be a **blocker** (it means the whole organisation's
+  runs are being returned).
+
+### 4.3 Explicit target as key=value
+
+**Steps**
+1. `a testcases run $TC --target 'browserName=firefox,platformName="Windows 11",browserVersion=latest' --build manual-$I`
+2. Wait 40 s; `a testcases get-run $TC <run id> -o json | jq -c '.jobs[0] | {target: .target.capabilities.browserName, success, error}'`
+
+**Expected**
+- Step 1 accepted; the jobs table shows `firefox latest / Windows 11`.
+- Step 2: `success` is `true` or `false` with an `error` string. Record which: the case was authored on
+  Chrome, so a Firefox failure is a service outcome, not a saucectl defect.
+
+### 4.4 Explicit target from a JSON file
+
+**Steps**
+1. `printf '{"browserName":"chrome","platformName":"Windows 11","sauce:options":{"screenResolution":"1280x1024"}}' > $W/target.json`
+2. `a testcases run $TC --target-json @$W/target.json --build manual-$I -o json | jq -c '.jobs[0].target.capabilities'`
+
+**Expected**
+- The capabilities include `"sauce:options":{"screenResolution":"1280x1024", …}` (the service adds `build`
+  and `name` inside `sauce:options`).
+
+### 4.5 A job that cannot start is reported as failed
+
+**Steps**
+1. `a testcases run $TC --target 'browserName=chrome,browserVersion=999,platformName="Windows 11"' --build manual-$I`
+2. Wait 15 s; `a testcases get-run $TC <run id>`
+
+**Expected**
+- Status `failed (0/1 passed)`; the jobs table shows Status `failed` and Error `Unable to start your session.`
+
+### 4.6 Run detail enforces its test case
+
+**Steps**
+1. `a testcases get-run $TC2 $RUN1`
+
+**Expected**
+- `Error: failed to get run: ai authoring service error (HTTP 404) TEST_CASE_RUN_NOT_FOUND: …` — the run
+  belongs to `$TC`, and the detail endpoint checks that.
+
+### 4.7 Run listing paging and filters
+
+**Steps**
+1. `a testcases list-runs $TC --limit 1 -o json | jq -r '.items[].id'`
+2. `a testcases list-runs $TC --skip 1 --limit 1 -o json | jq -r '.items[].id'`
+3. `a testcases list-runs $TC --all -o json | jq -c '{total, n: (.items|length), tcs: ([.items[].testCaseId]|unique)}'`
+4. `a testcases list-runs $TC --user-id $ME --start-date ${TODAY}T00:00:00Z -o json | jq .total`
+
+**Expected**
+- Steps 1 and 2 print different IDs.
+- Step 3: `n` equals `total` (4 runs so far) and `tcs` is `["<TC>"]`.
+- Step 4: the same total (all runs are yours, today).
+
+### 4.8 Revision path (undeclared service surface)
+
+**Steps**
+1. `a testcases run $TC --revision $REV --build manual-$I`
+
+**Expected**
+- Either accepted like 4.1, or a clear service error with a code. Record which. A hang or a Go stack trace
+  would be a defect.
+
+---
+
+## Part 5 — Test suites
+
+### 5.1 Create a suite with a member
+
+**Steps**
+1. `a testsuites create --name manual-$I-suite --tag manual-$I --test-case $TC -o json | tee $W/suite.json`
+2. `export SUITE=$(jq -r .id $W/suite.json)`
+3. `a testsuites get $SUITE`
+4. `a testcases list --test-suite-id $SUITE -o json | jq -r '.items[].id'`
+5. `a testcases get $TC | grep Suite`
+
+**Expected**
+- Step 1: JSON with a 32-hex `id`. Its `testCaseCount` may read `0`: the count in create/update responses
+  lags behind the change. That is expected.
+- Step 3: Property table with Name, Tags `manual-<I>`, Test Cases `1`, Team, Created/Updated by you, then
+  `List its test cases with: saucectl authoring testcases list --test-suite-id <SUITE>`.
+- Step 4: exactly `<TC>`. Step 5: `Suite <SUITE>`.
+
+### 5.2 Rename and retag
+
+**Steps**
+1. `a testsuites update $SUITE --name manual-$I-suite-2 --tag a --tag b`
+2. `a testsuites get $SUITE`
+
+**Expected**
+- Step 1: `Updated test suite "manual-<I>-suite-2" (<SUITE>).`
+- Step 2: Name `manual-<I>-suite-2`, Tags `a, b`.
+
+### 5.3 Incremental membership
+
+**Steps**
+1. `a testsuites update $SUITE --add-test-case $TC2`
+2. `a testcases list --test-suite-id $SUITE -o json | jq -r '.items[].id'`
+3. `a testsuites update $SUITE --remove-test-case $TC`
+4. `a testcases list --test-suite-id $SUITE -o json | jq -r '.items[].id'`
+5. `a testcases get $TC | grep Suite`
+6. `a testsuites update $SUITE --add-test-case $TC` (put it back for Part 10)
+
+**Expected**
+- Step 2: `<TC>` and `<TC2>`. Step 4: only `<TC2>`. Step 5: `Suite -`. Step 6 succeeds.
+
+### 5.4 Rejected updates
+
+**Steps**
+1. `a testsuites update $SUITE --test-case $TC --add-test-case $TC2`
+2. `a testsuites update $SUITE`
+
+**Expected**
+- Step 1: `Error: testCases cannot be combined with addTestCases or removeTestCases`.
+- Step 2: `Error: nothing to update: specify at least one change`.
+- Both exit 1 immediately: no request was sent.
+
+### 5.5 A second, empty suite and listing filters
+
+**Steps**
+1. `export SUITE2=$(a testsuites create --name manual-$I-suite-b -o json | jq -r .id)`
+2. `a testsuites list --id $SUITE --id $SUITE2 -o json | jq -r '.items[].name'`
+3. `a testsuites list --search manual-$I -o json | jq .total`
+4. `a testsuites list --limit 0 -o json`
+
+**Expected**
+- Step 2: exactly the two names. Step 3: `2`. Step 4: `{"items":[],"total":N}` (suites support count-only).
+
+### 5.6 Fire-and-forget suite run
+
+**Steps**
+1. `a testsuites run $SUITE --build manual-$I-suiterun`
+
+**Expected**
+- `Queued 2 run(s) for test suite <SUITE> under build "manual-<I>-suiterun…".` (record whether the name
+  comes back with ` - 1` appended) followed by
+  `Results are not followed here; see the Sauce Labs dashboard, or use 'saucectl run' with kind: authoring to wait for them.`
+- Exit 0. This started real jobs for both members; they will appear in `list-runs`.
+
+### 5.7 Author straight into a suite
+
+Do this **after** Part 10 (an extra member would change the counts expected there). It is listed here so
+it is not forgotten; the checkbox belongs to Part 10.7.
+
+---
+
+## Part 6 — Schedules
+
+### 6.1 Timezone is required and `UTC` is rejected
+
+**Steps**
+1. `a schedules create --name manual-$I-sched --cron "0 0 3 1 1 *" --test-suite-id $SUITE --state disabled`
+2. `a schedules create --name manual-$I-sched --cron "0 0 3 1 1 *" --test-suite-id $SUITE --state disabled --timezone UTC`
+
+**Expected**
+- Step 1: `Error: --timezone is required: an IANA region/city zone such as Europe/Berlin (the service does not accept "UTC")`.
+- Step 2: `Error: failed to create schedule: ai authoring service error (HTTP 400) INVALID_BODY: Invalid request body.; settings.timezone: Value must be a valid IANA timezone.`
+
+### 6.2 Create a disabled schedule far in the future
+
+**Steps**
+1. ```bash
+   a schedules create --name manual-$I-sched --cron "0 0 3 1 1 *" --timezone Europe/Berlin \
+     --test-suite-id $SUITE --state disabled --max-runs 1 --build manual-$I -o json | tee $W/sched.json
+   ```
+2. `export SCHED=$(jq -r .id $W/sched.json)`
+3. `a schedules get $SCHED`
+
+**Expected**
+- Step 1: JSON with `"stateName":"DISABLED"`, `settings.runningUserId` equal to `$ME`, `settings.maxRuns: 1`,
+  `settings.buildName: "manual-<I>"`, `nextRunDate` null.
+- Step 3: Property table: State `DISABLED`, Cron `0 0 3 1 1 *`, Timezone `Europe/Berlin`, Max Runs `1`,
+  Remaining Runs `1`, Build `manual-<I>`, Suites `<SUITE>`, Next Run `-`.
+
+### 6.3 Enable and disable change only the state
+
+**Steps**
+1. `a schedules enable $SCHED`
+2. `a schedules get $SCHED -o json | jq -c '{state: .state.stateName, settings}'`
+3. `a schedules disable $SCHED`
+4. `a schedules get $SCHED -o json | jq -c '{state: .state.stateName, settings}'`
+
+**Expected**
+- Step 1: `Schedule "manual-<I>-sched" (<SCHED>) is now ENABLED.` Step 3: `… is now DISABLED.`
+- Steps 2 and 4: `settings` identical to 6.2 (cron, timezone, runningUserId, maxRuns, buildName all intact);
+  only `state` differs.
+
+### 6.4 A partial update keeps everything it does not mention
+
+**Steps**
+1. `a schedules update $SCHED --cron "0 0 4 1 1 *"`
+2. `a schedules get $SCHED -o json | jq -c .settings`
+
+**Expected**
+- Step 1: `Updated schedule "manual-<I>-sched" (<SCHED>), DISABLED, next run -.`
+- Step 2: cron is `0 0 4 1 1 *`; timezone, runningUserId, maxRuns `1` and buildName unchanged.
+
+### 6.5 Unset clears a field explicitly
+
+**Steps**
+1. `a schedules update $SCHED --unset maxRuns --unset buildName`
+2. `a schedules get $SCHED -o json | jq -c .settings`
+3. `a schedules update $SCHED --unset cron`
+
+**Expected**
+- Step 2: `maxRuns` and `buildName` are **absent**; cron, timezone and runningUserId remain.
+- Step 3: `Error: cannot unset "cron"; options: tunnelName, buildName, startDate, endDate, maxRuns`.
+
+### 6.6 Suite membership of a schedule
+
+**Steps**
+1. `a schedules update $SCHED --add-test-suite-id $SUITE2`
+2. `a schedules get $SCHED -o json | jq -c .testSuiteIds`
+3. `a schedules update $SCHED --remove-test-suite-id $SUITE2`
+4. `a schedules update $SCHED --remove-test-suite-id $SUITE`
+5. `a schedules update $SCHED --test-suite-id $SUITE --add-test-suite-id $SUITE2`
+
+**Expected**
+- Step 2: both suite IDs. Step 3 succeeds and leaves only `<SUITE>`.
+- Step 4: `Error: a schedule must keep at least one test suite`.
+- Step 5: `Error: --test-suite-id cannot be combined with --add-test-suite-id or --remove-test-suite-id`.
+
+### 6.7 Empty update and invalid state
+
+**Steps**
+1. `a schedules update $SCHED`
+2. `a schedules create --name x --cron "0 0 3 1 1 *" --timezone Europe/Berlin --test-suite-id $SUITE --state running`
+
+**Expected**
+- Step 1: `Error: nothing to update: specify at least one change`.
+- Step 2: `Error: invalid --state "running"; options: ENABLED, DISABLED`.
+
+### 6.8 Listing
+
+**Steps**
+1. `a schedules list --test-suite-id $SUITE`
+2. `a schedules list --id $SCHED -o json | jq .total`
+3. `a schedules list --search manual-$I -o json | jq .total`
+4. `a schedules list --limit 0 -o json`
+
+**Expected**
+- Step 1: a row for `manual-<I>-sched` with State `DISABLED` and Next Run `-`. Steps 2 and 3: `1`.
+- Step 4: `{"items":[],"total":N}`.
+
+### 6.9 Bad cron is rejected by the service
+
+**Steps**
+1. `a schedules create --name x --cron "not a cron" --timezone Europe/Berlin --test-suite-id $SUITE --state disabled`
+
+**Expected**
+- A service `INVALID_BODY` error mentioning `settings.cron`. Record the wording.
+
+---
+
+## Part 7 — Variables
+
+All variables in this part use `team` scope unless stated.
+
+### 7.1 Secret from an environment variable
+
+**Steps**
+1. `MY_SECRET=abc a variables create --scope team --name manual_${I}_secret --secret --value-from-env MY_SECRET -o json | tee $W/var.json`
+2. `export VAR=$(jq -r .id $W/var.json)`
+3. `jq 'has("value")' $W/var.json`
+
+**Expected**
+- Step 1: JSON with `"isSecret": true`. Step 3: `false` — a secret's value is never in the output.
+
+### 7.2 Plain values from stdin and from a file
+
+**Steps**
+1. `echo x | a variables create --scope team --name manual_${I}_stdin --value-from-file - -o json | jq -r .value`
+2. `printf 'y\n' > $W/v.txt; a variables create --scope team --name manual_${I}_file --value-from-file $W/v.txt -o json | jq -r .value`
+
+**Expected**
+- Step 1 prints `x`, step 2 prints `y`: exactly one trailing newline is stripped.
+
+### 7.3 Masked prompt for a secret (terminal)
+
+**Steps**
+1. `a variables create --scope team --name manual_${I}_prompt --secret`
+2. Type a value and press Enter.
+
+**Expected**
+- A `Value:` prompt; the characters you type are **not** echoed. Then
+  `Created secret variable "manual_<I>_prompt" (<id>) at team scope.`
+
+### 7.4 Plain prompt (terminal)
+
+**Steps**
+1. `a variables create --scope team --name manual_${I}_prompt2`
+2. Type a value and press Enter.
+
+**Expected**
+- A `Value:` prompt with visible input; `Created plain variable … at team scope.`
+
+### 7.5 `--value` with `--secret` warns
+
+**Steps**
+1. `a variables create --scope team --name manual_${I}_v --secret --value abc`
+
+**Expected**
+- A `WRN A secret passed with --value is visible in shell history and the process list; prefer --value-from-env or --value-from-file.`
+  line, then `Created secret variable …`.
+
+### 7.6 A secret is never displayed
+
+**Steps**
+1. `a variables get $VAR`
+2. `a variables get $VAR -o json | jq 'has("value")'`
+3. `a variables list --scope team --search manual_$I`
+4. `a variables list --scope team --search manual_$I -o json | jq -c '[.items[] | {name, isSecret, hasValue: has("value")}]'`
+
+**Expected**
+- Step 1: Value row shows `<secret>`; the last line reads
+  `Pass --expected-last-update "<timestamp>" to update or delete against exactly this version.`
+- Step 2: `false`.
+- Step 3: the secret rows show `<secret>` in the Value column; the plain ones (`manual_<I>_stdin`, `_file`,
+  `_prompt2`) show their values. The Last Update column shows the raw timestamp.
+- Step 4: `hasValue` is `false` for every secret and `true` for every plain variable.
+
+### 7.7 Conflict detection on update
+
+**Steps**
+1. `export T1=$(a variables get $VAR -o json | jq -r .lastUpdate)`
+2. `a variables update $VAR --description "first change"`
+3. `a variables update $VAR --description "second change" --expected-last-update "$T1"`
+4. `a variables update $VAR --description "third change"`
+
+**Expected**
+- Step 2: `Updated secret variable "manual_<I>_secret" (<VAR>); new version <timestamp>.`
+- Step 3: `Error: variable <VAR> was changed by someone else since it was read; re-read it with 'saucectl authoring variables get <VAR>' and try again`; exit 1.
+- Step 4 (no token, default read-then-write): succeeds.
+
+### 7.8 Toggle secrecy
+
+**Steps**
+1. `a variables update $VAR --secret=false`
+2. `a variables get $VAR | grep -E 'Secret|Value'`
+3. `a variables update $VAR --secret=true`
+4. `a variables get $VAR | grep -E 'Secret|Value'`
+
+**Expected**
+- Per the API documentation the stored value moves across when secrecy is toggled without a new value.
+  Step 2 should show `Secret false` and the value visible; step 4 `Secret true` and `<secret>`. Record the
+  actual behaviour if it differs — this path was never exercised live.
+
+### 7.9 Scope and identifier pairing
+
+**Steps**
+1. `a variables list --scope testSuite`
+2. `a variables create --scope org --test-case-id $TC --name manual_${I}_bad --value v`
+3. `a variables list --scope testCase --test-case-id $TC -o json | jq .total`
+
+**Expected**
+- Step 1: `Error: scope requires its identifier: scope=testSuite requires a test suite id`.
+- Step 2: `Error: scope does not accept an identifier: scope=org does not accept a test suite or test case id`.
+- Step 3: `0` (valid request, no variables yet).
+
+### 7.10 Suite- and case-scoped variables
+
+**Steps**
+1. `export VSUITE=$(a variables create --scope testSuite --test-suite-id $SUITE --name manual_${I}_s --value 1 -o json | jq -r .id)`
+2. `export VCASE=$(a variables create --scope testCase --test-case-id $TC2 --name manual_${I}_c --value 2 -o json | jq -r .id)`
+3. `a variables list --scope testSuite --test-suite-id $SUITE -o json | jq -r '.items[].name'`
+4. `a variables list --scope testCase --test-case-id $TC2 -o json | jq -r '.items[].name'`
+
+**Expected**
+- Steps 3 and 4 print `manual_<I>_s` and `manual_<I>_c` respectively.
+
+### 7.11 Limits and validation
+
+**Steps**
+1. `a variables list --limit 0`
+2. `a variables list --limit 201`
+3. `a variables create --scope team --name "Bad Name" --value v`
+4. `a variables create --scope team --name manual_${I}_none < /dev/null`
+5. `a variables update $VAR`
+
+**Expected**
+- Steps 1 and 2: `Error: --limit must be between 1 and 200 for variables; the service has no count-only mode`.
+- Step 3: `Error: invalid --name "Bad Name": use lowercase letters, digits and underscores only`.
+- Step 4: `Error: no value given; supply one with --value-from-env NAME, --value-from-file PATH (or - for stdin), or --value`.
+- Step 5: `Error: nothing to update: specify --name, --description, --secret or a value source`.
+
+---
+
+## Part 8 — Export a test case to code
+
+### 8.1 Available targets
+
+**Steps**
+1. `a testcases list-code-targets $TC`
+
+**Expected**
+- One target per line, e.g. `typescript_playwright`, `python_selenium`, `java_selenium` (nine in the
+  reference org).
+
+### 8.2 Source to standard output
+
+**Steps**
+1. `a testcases code $TC --target typescript_playwright > $W/login.spec.ts`
+2. `head -5 $W/login.spec.ts`
+
+**Expected**
+- The file is Playwright TypeScript (starts with an `import … from '@playwright/test'`). Nothing else was
+  printed to the terminal.
+
+### 8.3 Write to a file, refuse to overwrite, force
+
+**Steps**
+1. `a testcases code $TC --target python_selenium -f $W/test_login.py`
+2. `a testcases code $TC --target python_selenium -f $W/test_login.py`
+3. `a testcases code $TC --target python_selenium -f $W/test_login.py --force`
+
+**Expected**
+- Step 1: `Wrote N bytes to <W>/test_login.py (python_selenium).`
+- Step 2: `Error: <W>/test_login.py already exists; use --force to overwrite`; exit 1.
+- Step 3: written again. The byte count may differ from step 1: exports are generated fresh each time.
+
+### 8.4 Write into a directory with a derived filename
+
+**Steps**
+1. `a testcases code $TC --target java_selenium -d $W/out/`
+2. `ls $W/out/; grep -m1 'public class' $W/out/*.java`
+
+**Expected**
+- Exactly one `.java` file whose name equals the `public class` name in the source (for example
+  `SauceDemoLoginTest.java` with `public class SauceDemoLoginTest`).
+
+### 8.5 Unavailable target and missing target
+
+**Steps**
+1. `a testcases code $TC --target cobol_thing`
+2. `a testcases code $TC < /dev/null`
+
+**Expected**
+- Step 1: `Error: target "cobol_thing" is not available for this test case; available: <list>`.
+- Step 2: `Error: --target is required; available: <list>`.
+
+### 8.6 Interactive target picker (terminal)
+
+**Steps**
+1. `a testcases code $TC`
+2. Choose `typescript_playwright` with the arrow keys and Enter.
+
+**Expected**
+- A select prompt `Export target:` listing the targets; after choosing, the source is printed.
+
+### 8.7 JSON output
+
+**Steps**
+1. `a testcases code $TC --target python_selenium -o json | jq -c '{target, len: (.code|length)}'`
+
+**Expected**
+- `{"target":"python_selenium","len":<n>}`.
+
+### 8.8 Export of an empty test case
+
+Only if the organisation has a test case with no steps (`a testcases list -o json | jq -r '.items[] | select((.revisions|length)==0 or (.revisions[-1].steps|length)==0) | .id'`).
+
+**Steps**
+1. `a testcases code <that id> --target python_selenium`
+
+**Expected**
+- An error saying the test case has no steps to export / is empty; never an empty file. Record "not run" if
+  no such case exists.
+
+### 8.9 Shell completion
+
+**Steps**
+1. Install completion for your shell as `saucectl completion --help` describes, then in a fresh shell:
+2. `saucectl authoring variables list --scope <TAB>`
+3. `saucectl authoring schedules create --state <TAB>`
+4. `saucectl authoring testcases code $TC --target <TAB>`
+
+**Expected**
+- Step 2 offers `org team testSuite testCase`. Step 3 offers `ENABLED DISABLED`.
+- Step 4 offers **nothing**. **Known gap**: completion runs no pre-run hooks, so the service client is never
+  initialised. Record as seen; it will be fixed.
+
+---
+
+## Part 9 — Artifacts
+
+### 9.1 Download a step screenshot by identifier
+
+**Steps**
+1. `export SHOT=$(a testcases get $TC -o json | jq -r '.revisions[-1].steps[0].screenshotUrl')`
+2. `export SHOTID=$(echo "$SHOT" | sed -E 's#^[^?]*/([^/?]+)(\?.*)?$#\1#')`
+3. `a testcases get $TC --show-steps | grep -c "$SHOTID"`
+4. `a download-artifact $SHOTID -f $W/step1.png`
+5. Open `$W/step1.png`.
+
+**Expected**
+- Step 2 yields a 32-character hex identifier (the last path segment of the signed URL).
+- Step 3: `1` — the Screenshot column of step 1 shows exactly that identifier, not the URL.
+- Step 4: `Wrote N bytes to <W>/step1.png`; the file is a PNG of the login page.
+
+### 9.2 Download by full URL
+
+**Steps**
+1. `a download-artifact "$SHOT" -f $W/step1-again.png` (keep the quotes; the URL contains `&`)
+2. `cmp $W/step1.png $W/step1-again.png && echo same`
+
+**Expected**
+- Same byte count; `same`.
+
+### 9.3 Destination required; no overwrite without `--force`
+
+**Steps**
+1. `a download-artifact $SHOTID`
+2. `a download-artifact $SHOTID -f $W/step1.png`
+3. `a download-artifact $SHOTID -f $W/step1.png --force`
+
+**Expected**
+- Step 1: `Error: a destination is required: use -f/--filename`.
+- Step 2: `Error: <W>/step1.png already exists; use --force to overwrite`.
+- Step 3: written.
+
+### 9.4 Unknown identifier
+
+**Steps**
+1. `time a download-artifact 00000000000000000000000000000000 -f $W/x.bin`
+
+**Expected**
+- `… (HTTP 404) FILE_NOT_FOUND …`, answered as quickly as any other command; no file created.
+
+---
+
+## Part 10 — Pipeline runs with `kind: authoring`
+
+Create the configuration file used by most scenarios in this part:
+
+```bash
+cat > $W/cfg.yml <<EOF
+apiVersion: v1alpha
+kind: authoring
+sauce:
+  region: us-west-1
+  concurrency: 2
+  metadata:
+    build: manual-$I-pipeline
+defaults:
+  timeout: 5m
+suites:
+  - name: "login on chrome"
+    testCases: [$TC]
+    targets:
+      - capabilities:
+          browserName: chrome
+          browserVersion: latest
+          platformName: "Windows 11"
+artifacts:
+  download:
+    when: always
+    match: ["*.mp4", "log.json"]
+    directory: $W/artifacts/
+reporters:
+  junit:
+    enabled: true
+    filename: $W/report.xml
+EOF
+```
+
+### 10.1 Dry run starts nothing
+
+**Steps**
+1. `export BEFORE=$(a testcases list-runs $TC --limit 1 -o json | jq .total)`
+2. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --dry-run`
+3. `a testcases list-runs $TC --limit 1 -o json | jq .total`
+
+**Expected**
+- Step 2 prints (after the red advisory block, see 10.16) `Running AI-authored tests in Sauce Labs.` and
+  then:
+  ```
+  The following test cases would have run:
+    - login on chrome: manual-<I>-login-renamed (<TC>) on 1 configured target(s)
+  ```
+  Exit 0.
+- Step 3 equals `$BEFORE`: no run was started.
+
+### 10.2 A passing run
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c $W/cfg.yml; echo "exit=$?"`
+2. `grep -c '<testcase' $W/report.xml`
+3. `find $W/artifacts -type f`
+
+**Expected**
+- Log lines: `Starting AI-authored test runs. concurrency=2 testCases=1`, `Run started. … url=https://app.saucelabs.com/tests/<job>`,
+  `Runs in progress: 1` every ten seconds, then `Run finished.`
+- A **Results** table with one ✔ row: Name `login on chrome - manual-<I>-login-renamed`, Status `passed`,
+  Browser `chrome latest`, Platform `Windows 11`, Attempts `1`; footer `All suites have passed`; a
+  `Build Link:` that opens the build in the dashboard.
+- `exit=0`. Step 2: `1`. Step 3: `<W>/artifacts/login_on_chrome_-_manual-<I>-login-renamed/video.mp4` and `log.json`.
+
+### 10.3 A failing run fails the pipeline
+
+**Steps**
+1. `sed 's/browserVersion: latest/browserVersion: "999"/' $W/cfg.yml > $W/fail.yml`
+2. `./saucectl run --disable-usage-metrics -c $W/fail.yml; echo "exit=$?"`
+3. `grep -E '<failure|failures=' $W/report.xml`
+
+**Expected**
+- `ERR Run finished with failures.`; the row shows ✖ and Status `failed`; footer `1 of 1 suites have failed (100%)`;
+  `Build Link: N/A` (the job never existed on the Sauce side); `exit=1`.
+- Step 3: `<failure message="Unable to start your session." …>` and `failures="1"`.
+
+### 10.4 One result row per target
+
+**Steps**
+1. Edit `$W/cfg.yml`: add a second target to the suite:
+   ```yaml
+       targets:
+         - capabilities: {browserName: chrome, browserVersion: latest, platformName: "Windows 11"}
+         - capabilities: {browserName: firefox, browserVersion: latest, platformName: "Windows 11"}
+   ```
+2. `./saucectl run --disable-usage-metrics -c $W/cfg.yml; echo "exit=$?"`
+3. `grep -c '<testcase' $W/report.xml`
+4. Restore the single-target file afterwards (rerun the `cat > $W/cfg.yml` block).
+
+**Expected**
+- Two rows for the one test case, Browser `chrome latest` and `firefox latest`. Step 3: `2`. Exit 0 if both
+  passed, 1 if Firefox failed (record which; see 4.3).
+
+### 10.5 Suite referenced by exact name
+
+**Steps**
+1. Write `$W/byname.yml` like `cfg.yml` but with the suite block
+   ```yaml
+   suites:
+     - name: "whole suite"
+       testSuiteName: manual-<I>-suite-2      # the current name after 5.2
+   ```
+   (no `targets`, so each case's stored target applies).
+2. `./saucectl run --disable-usage-metrics -c $W/byname.yml --dry-run`
+3. Change `testSuiteName` to `manual` and dry-run again.
+4. `export SUITE3=$(a testsuites create --name manual-$I-suite-2 -o json | jq -r .id)` (a second suite with
+   the exact same name), then dry-run the original file again.
+5. `a testsuites delete $SUITE3 --yes`
+
+**Expected**
+- Step 2 lists both members (`<TC>` and `<TC2>`) `on stored run targets`.
+- Step 3: an `ERR failed to execute run command` line whose error reads
+  `running AI-authored tests: suite "whole suite": no test suite is named "manual" (the match is exact and case-sensitive)`;
+  exit 1. The service's own search is a substring match, so this proves the exact match is enforced
+  client-side. (`saucectl run` reports errors as an ERR log line, not as `Error: …`.)
+- Step 4: the same kind of line with
+  `2 test suites are named "manual-<I>-suite-2"; reference one by testSuiteId instead: <ids>`; exit 1.
+- Step 5: `Deleted test suite …`.
+
+### 10.6 Suite referenced by ID, narrowed by tag
+
+**Steps**
+1. Write `$W/byid.yml` with
+   ```yaml
+   suites:
+     - name: "tagged only"
+       testSuiteId: <SUITE>
+       tags: [manual-<I>-only]
+   ```
+2. `./saucectl run --disable-usage-metrics -c $W/byid.yml --dry-run`
+3. Remove the `tags` line and dry-run again.
+
+**Expected**
+- Step 2 lists only `<TC2>` (the case authored in 2.2 with the extra tag). Step 3 lists `<TC>` and `<TC2>`.
+
+### 10.7 Author straight into a suite (deferred from 5.7)
+
+**Steps**
+1. ```bash
+   a testcases generate --name "manual-$I-insuite" \
+     --intent "Open https://www.saucedemo.com and verify the login button is visible." \
+     --test-url https://www.saucedemo.com \
+     --target 'browserName=chrome,platformName="Windows 11",browserVersion=latest' \
+     --tag manual-$I --test-suite-id $SUITE --wait
+   ```
+2. `a testcases get <new id> | grep Suite`
+
+**Expected**
+- Step 2: `Suite <SUITE>`.
+
+### 10.8 Concurrency limit
+
+**Steps**
+1. Write `$W/ccy.yml` with a suite listing three cases: `testCases: [<TC>, <TC2>, <TC3>]` and no targets.
+2. `./saucectl run --disable-usage-metrics -c $W/ccy.yml --ccy 1 2>&1 | grep -E 'Run (started|finished)'`
+
+**Expected**
+- The `Run started` lines are separated by roughly one run's duration (~25 s): the second starts only after
+  the first finishes. With `--ccy 3` instead, all three start within a second or two.
+
+### 10.9 Async
+
+**Steps**
+1. `rm -f $W/report.xml; ./saucectl run --disable-usage-metrics -c $W/cfg.yml --async; echo "exit=$?"`
+2. `ls $W/report.xml`
+
+**Expected**
+- `Run started (async). Check it with: saucectl authoring testcases get-run <TC> <run>`; the row shows Status
+  `in progress`; footer `All suites have launched`; `exit=0`.
+- Step 2: no report file (JUnit and JSON reporters are disabled for async runs).
+
+### 10.10 JSON reporter
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --reporters.json.enabled --reporters.json.filename $W/report.json`
+2. `jq 'length' $W/report.json`
+
+**Expected**
+- Step 2: `1` (one entry per job).
+
+### 10.11 Artifact rules: `when: fail` and cleanup
+
+**Steps**
+1. `sed 's/when: always/when: fail/' $W/cfg.yml > $W/onfail.yml; rm -rf $W/artifacts`
+2. `./saucectl run --disable-usage-metrics -c $W/onfail.yml; find $W/artifacts -type f | wc -l`
+3. `mkdir -p $W/artifacts && touch $W/artifacts/old.txt`
+4. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --artifacts.cleanup; ls $W/artifacts`
+
+**Expected**
+- Step 2: `0` files — a passing run downloads nothing under `when: fail`.
+- Step 4: `old.txt` is gone; only the new run's folder exists.
+
+### 10.12 Timeout
+
+**Steps**
+1. `sed 's/timeout: 5m/timeout: 5s/' $W/cfg.yml > $W/timeout.yml`
+2. `./saucectl run --disable-usage-metrics -c $W/timeout.yml; echo "exit=$?"`
+
+**Expected**
+- `ERR Timed out waiting; the run may still be going on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- The row shows ✖ with Status `?`; footer `1 of 1 suites have failed (100%)`; `exit=1`.
+- `a testcases get-run $TC <run>` a minute later shows the run finished on its own.
+
+### 10.13 Ctrl-C during a run
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c $W/cfg.yml`
+2. As soon as `Run started` appears, press **Ctrl-C once**.
+3. A minute later: `a testcases get-run $TC <run id from the log>`
+
+**Expected**
+- `WRN Interrupted locally; the run continues on Sauce Labs. Check it with: saucectl authoring testcases get-run <TC> <run>`
+- The results table still renders, the row `in progress`; exit 1.
+- Step 3: `passed (1/1)` — the interruption did not stop the remote run.
+- Variant: press Ctrl-C **before** `Run started` appears (during the entitlement check). Expected log:
+  `WRN Run was not started: interrupted.`
+
+### 10.14 Unsupported settings are warned about, never silently ignored
+
+**Steps**
+1. ```bash
+   ./saucectl run --disable-usage-metrics -c $W/cfg.yml --dry-run \
+     --retries 2 --tags a --env X=1 --launch-order "fail rate" --show-console-log --live-logs --fail-fast 2>&1 | grep WRN
+   ```
+
+**Expected**
+- Seven WRN lines about settings, one each for `sauce.retries`, `sauce.metadata.tags`, `env / --env`,
+  `showConsoleLog / --show-console-log`, `--live-logs`, `sauce.launchOrder / --launch-order` and
+  `--fail-fast`, each saying it is not supported for kind: authoring and will be ignored. (An eighth WRN
+  about a newer saucectl version may also appear; ignore it.) The dry run then proceeds.
+
+### 10.15 Select a suite
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c $W/byname.yml --select-suite "whole suite" --dry-run`
+2. `./saucectl run --disable-usage-metrics -c $W/byname.yml --select-suite nope --dry-run`
+
+**Expected**
+- Step 1 lists the suite's cases. Step 2: an `ERR failed to execute run command` line with
+  `error="no suite named 'nope' found"`; exit 1.
+
+### 10.16 The advisory schema line, before and after merge
+
+**Steps**
+1. Before merge: run any `./saucectl run … --dry-run` from this part and look at the first lines.
+2. After the PR merges to `main`: rebuild from `main` and repeat.
+
+**Expected**
+- Before merge: a red block `There is 1 validation error found in <cfg>:` /
+  `- value must be one of "apitest", "cypress", … in /kind`. The run still proceeds (validation is advisory
+  and reads the bundle published from `main`).
+- After merge: the block is gone.
+
+### 10.17 Build name grouping and truncation
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --build manual-$I-grouping`
+2. Open the Build Link.
+3. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --dry-run --build "$(printf 'b%.0s' $(seq 1 120))" 2>&1 | grep -i 'build name'`
+
+**Expected**
+- Step 2: the build is named `manual-<I>-grouping - 1` (the service appends ` - 1`) and contains the job.
+- Step 3: `WRN Build name exceeds 100 characters and will be truncated for AI authoring runs.`
+
+### 10.18 Configuration validation
+
+For each file, `./saucectl run --disable-usage-metrics -c <file> --dry-run` must fail immediately, before
+any request is made, with an `ERR failed to execute run command` line whose `error=` text is the message
+shown, and exit 1.
+
+| Change to `cfg.yml` | Expected error |
+|---|---|
+| Delete the whole `suites:` block | `no suites configured: add at least one entry under 'suites'` |
+| Remove `name:` from the suite | `every suite needs a name` |
+| Add `testSuiteId: abc` next to `testCases` | `suite "login on chrome" must set exactly one of testSuiteId, testSuiteName or testCases` |
+| Remove `testCases` (keep the name) | same message as above |
+| `testCases: [""]` | `suite "login on chrome" has an empty test case id` |
+| Replace the target with `- capabilities: {}` | `suite "login on chrome" target 1 has no capabilities` |
+| Duplicate the suite block (same name twice) | `suite name "login on chrome" is used more than once` |
+| Delete `region: us-west-1` | `no sauce region set` |
+
+---
+
+## Part 11 — Deleting shared assets: the confirmation matrix
+
+Every delete command behaves the same way. Run all four conditions for each asset type; the assets are the
+ones you created, so this doubles as teardown. Answer **N** where told, so nothing is deleted before its row.
+
+### 11.1 Schedule
+
+**Steps**
+1. Terminal, no `--yes`: `a schedules delete $SCHED` → answer **N**.
+2. `a schedules get $SCHED -o json | jq -r .name` (still there).
+3. Pipeline simulation: `a schedules delete $SCHED < /dev/null; echo "exit=$?"`
+4. Pipeline with bypass: `a schedules delete $SCHED --yes; echo "exit=$?"`
+
+**Expected**
+- Step 1: `About to delete schedule "manual-<I>-sched" (<SCHED>).`, then lines
+  `- it is DISABLED and runs "0 0 4 1 1 *" (Europe/Berlin)` and `- it triggers 1 suite(s): <SUITE>`, then
+  `? Proceed? (y/N)`. Answering N prints `Error: aborted`, exit 1.
+- Step 2: the name — nothing was deleted.
+- Step 3: `Error: refusing to proceed without confirmation: not running interactively; re-run with --yes to confirm (schedule "manual-<I>-sched" (<SCHED>))`, `exit=1`.
+- Step 4: `Deleted schedule "manual-<I>-sched" (<SCHED>).`, `exit=0`.
+
+### 11.2 Test suites
+
+**Steps**
+1. Terminal: `a testsuites delete $SUITE` → **N**.
+2. Terminal: `a testsuites delete $SUITE --delete-test-cases` → **N**.
+3. `a testsuites delete $SUITE < /dev/null; echo "exit=$?"`
+4. `a testsuites delete $SUITE --yes; echo "exit=$?"`
+5. `a testcases get $TC2 | grep Suite` and `a testcases get $TC | grep Suite`
+6. Terminal, accept this time: `a testsuites delete $SUITE2` → **Y**.
+7. `a variables get $VSUITE` (the suite-scoped variable from 7.10)
+
+**Expected**
+- Step 1: `About to delete test suite "manual-<I>-suite-2" (<SUITE>).` with
+  `- 3 test case(s) in the suite will be kept and become unassigned` (TC, TC2 and the 10.7 case). No
+  schedule line any more (11.1 deleted it). N → `Error: aborted`.
+- Step 2: the same prompt but `- 3 test case(s) in the suite will be DELETED`. N → aborted. Verify the cases
+  still exist.
+- Step 3: refusal, `exit=1`. Step 4: `Deleted test suite …`, `exit=0`.
+- Step 5: both show `Suite -` — the members were kept.
+- Step 6: prompt, then `Deleted test suite "manual-<I>-suite-b" (<SUITE2>).`
+- Step 7: record whether the suite-scoped variable still exists after its suite is gone (either is
+  acceptable; it was never observed). If it exists, delete it with `--yes`.
+
+### 11.3 Variables
+
+**Steps**
+1. Terminal: `a variables delete $VAR` → **N**.
+2. `a variables delete $VAR --yes --expected-last-update 2026-01-01T00:00:00.000Z; echo "exit=$?"`
+3. `a variables delete $VAR < /dev/null; echo "exit=$?"`
+4. `a variables delete $VAR --yes; echo "exit=$?"`
+5. Terminal, accept: `a variables delete $VCASE` → **Y**.
+6. Delete the rest with `--yes`: `manual_<I>_stdin`, `_file`, `_prompt`, `_prompt2`, `_v` (find IDs with
+   `a variables list --scope team --search manual_$I -o json | jq -r '.items[].id'`).
+
+**Expected**
+- Step 1: `About to delete variable "manual_<I>_secret" (<VAR>).`, `- it is a secret variable at team scope`,
+  `- every test referencing {{team:manual_<I>_secret}} will lose it`, `? Proceed? (y/N)`; N → aborted.
+- Step 2: the stale-token conflict message (`was changed by someone else since it was read; re-read it with …`),
+  `exit=1`, variable still present.
+- Step 3: refusal, `exit=1`. Step 4: `Deleted variable …`, `exit=0`.
+- Step 5: the prompt names `{{testCase:manual_<I>_c}}` and the test case; Y deletes.
+- Step 6: each prints `Deleted variable …`.
+
+### 11.4 Test cases
+
+**Steps**
+1. Terminal: `a testcases delete $TC` → **N**.
+2. `a testcases delete $TC < /dev/null; echo "exit=$?"`
+3. `a testcases delete $TC --yes; echo "exit=$?"`
+4. `a testcases list-runs $TC --limit 1 -o json | jq .total`
+5. Terminal, accept: `a testcases delete $TC2` → **Y**.
+6. Delete every remaining `manual-<I>-…` case with `--yes`:
+   `a testcases list --search manual-$I -o json | jq -r '.items[].id'` and loop.
+
+**Expected**
+- Step 1: `About to delete test case "manual-<I>-login-renamed" (<TC>).` with
+  `- its N recorded run(s) stay in run history but will belong to a test case that no longer exists`
+  (N = every run of `<TC>` from Parts 4, 5 and 10); `? Proceed? (y/N)`; N → aborted.
+- Step 2: refusal, `exit=1`. Step 3: `Deleted test case …`, `exit=0`.
+- Step 4: the run count is unchanged — run history outlives its test case.
+- Steps 5 and 6: deleted.
+
+### 11.5 Nothing left behind
+
+**Steps**
+1. `a testcases list --search manual-$I -o json | jq .total`
+2. `a testsuites list --search manual-$I -o json | jq .total`
+3. `a schedules list --search manual-$I -o json | jq .total`
+4. `a variables list --scope team --search manual_$I -o json | jq .total`
+5. `a testcases list-tags | grep -c manual-$I`
+6. `rm -rf $W`
+
+**Expected**
+- Steps 1 to 5 all print `0`.
+
+---
+
+## Part 12 — Regression on surfaces the PR touched but did not add
+
+### 12.1 Root help lists the new group once
+
+**Steps**
+1. `./saucectl --help | grep -c '^  authoring'`
+
+**Expected**
+- `1`.
+
+### 12.2 Other kinds still dispatch and validate
+
+**Steps**
+1. `./saucectl run --disable-usage-metrics -c .sauce/playwright.yml --dry-run 2>&1 | tail -5`
+2. `./saucectl run --disable-usage-metrics -c .sauce/cypress-10.yml --dry-run 2>&1 | grep -c 'validation error'`
+3. After the PR merges, rebuild from `main` and repeat both.
+
+**Expected**
+- Step 1 runs the Playwright path (bundling and dry-run output), not `unknown framework configuration`.
+- Step 2: `0` both before and after merge — the regenerated bundle did not change validation for existing
+  kinds.
+
+### 12.3 Unrelated groups unaffected
+
+**Steps**
+1. `./saucectl storage list --limit 1`
+2. `./saucectl builds list vdc --size 1`
+3. `./saucectl devices list | head -3`
+
+**Expected**
+- Each behaves exactly as it does on `main`.
+
+### 12.4 The schema bundle is reproducible
+
+**Steps**
+1. `make schema && git status --short api/`
+
+**Expected**
+- No output from `git status`: regenerating produces a byte-identical bundle.
+
+### 12.5 CI stamps the version
+
+**Steps**
+1. Open the PR's `build` job in GitHub Actions and search the log for `Running version`.
+
+**Expected**
+- `Running version v0.0.0+<sha>`, not `0.0.0+unknown`.
+
+### 12.6 Every command has examples
+
+**Steps**
+```bash
+for g in testcases testsuites schedules variables; do
+  for c in $(./saucectl authoring $g --help | sed -n '/^Available Commands:/,/^$/p' | awk '/^  [a-z]/{print $1}'); do
+    ./saucectl authoring $g $c --help | grep -q 'Examples:' || echo "missing: $g $c"
+  done
+done
+./saucectl authoring download-artifact --help | grep -q 'Examples:' || echo "missing: download-artifact"
+```
+
+**Expected**
+- Nothing printed.
+
+### 12.7 Aliases
+
+**Steps**
+1. `a tc ls --limit 1 -o json | jq .total`
+2. `a ts ls --limit 1 -o json | jq .total`
+3. `a schedule ls --limit 1 -o json | jq .total`
+4. `a var ls --scope team --limit 1 -o json | jq .total`
+5. `a artifact --help | head -1`
+
+**Expected**
+- Each resolves to the corresponding command (`tc`=testcases, `ts`=testsuites, `schedule`=schedules,
+  `var`=variables, `artifact`=download-artifact, `ls`=list).
+
+---
+
+## Part 13 — Environment-dependent scenarios
+
+Run each if you have the environment; otherwise record **not run** with the reason.
+
+### 13.1 Organisation without the entitlement
+
+**Steps**
+1. With credentials of an organisation that does **not** have AI authoring: `a testcases list`
+2. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --dry-run` with the same credentials.
+
+**Expected**
+- Both: `Error: AI Test Authoring is not included in your Sauce Labs plan; contact your Sauce Labs account team to enable it`;
+  no mention of credentials; exit 1.
+
+### 13.2 Sauce Connect tunnel
+
+**Steps**
+1. Start a tunnel named `manual-$I-tunnel`.
+2. `a testcases run $TC --tunnel-name manual-$I-tunnel --build manual-$I`
+3. `a testcases run $TC --tunnel-name no-such-tunnel-$I`
+4. Add `sauce.tunnel.name: manual-<I>-tunnel` to `cfg.yml` and run the pipeline; then change it to a
+   made-up name and run again.
+
+**Expected**
+- Step 2 accepted; the job runs through the tunnel. Step 3: `SC_TUNNEL_NOT_FOUND` with the service's detail.
+- Step 4: with the live tunnel, `Performing tunnel readiness check...` then `Tunnel is ready!` then the
+  run; with the made-up name the readiness check fails after the tunnel timeout **before** any run starts.
+
+### 13.3 A case that stores an empty tunnel name
+
+Only with the owner's agreement (test case `6a6b903c0405fb400076b2ba` is a colleague's Android emulator
+test).
+
+**Steps**
+1. `a testcases get 6a6b903c0405fb400076b2ba | grep Tunnel` (must show the empty-string row)
+2. `a testcases run 6a6b903c0405fb400076b2ba --build manual-$I` and poll `get-run`.
+
+**Expected**
+- The run starts and completes: the runner sends `scTunnelName: null`, which the service accepts. Note that
+  this also clears the stored empty string (3.8 will read `-` afterwards).
+
+### 13.4 Real device
+
+**Steps**
+1. Author a case with a real-device target (for example `--target-json` with `appium:deviceName` of a real
+   device and `platformName=Android`; how the service marks a target as real-device is not documented —
+   record what works).
+2. Run it through the pipeline.
+
+**Expected**
+- Its row appears in a separate real-device results table with its own Build Link.
+
+### 13.5 Another data centre end to end
+
+**Steps**
+1. Author a case with `a -r eu-central-1 testcases generate …`.
+2. Pipeline config with `sauce.region: eu-central-1` and that case.
+
+**Expected**
+- Job URLs use `app.eu-central-1.saucelabs.com`; the run passes.
+
+### 13.6 `make schema` on macOS
+
+**Steps**
+1. On a Mac: `make schema`
+
+**Expected**
+- Regenerates without a `pushd: not found` error (the Makefile now uses `cd`).
+
+### 13.7 Updating a schedule in an observed state
+
+Only if you own a schedule whose state is `ERRORED` or `RUNNING`.
+
+**Steps**
+1. `a schedules update <it> --cron "0 0 5 1 1 *"`
+2. `a schedules update <it> --cron "0 0 5 1 1 *" --state disabled`
+
+**Expected**
+- Step 1: `Error: schedule is currently ERRORED; pass --state ENABLED or --state DISABLED to update it`.
+- Step 2: succeeds.
+
+---
 
 ## Recording results
 
-For each row record: pass / fail / not run (with reason), the command actually typed, and for failures the
-full output plus the run or task ID. Severity guide: **blocker** = wrong exit code, data shown for the wrong
-test case, a secret displayed, a delete without confirmation; **major** = a documented behaviour absent or a
-misleading message; **minor** = formatting. File blockers against PR #1100 before merge. Do not file the two
-Known gaps; they are already tracked.
+For each scenario record: **pass / fail / not run** (with the reason), the command actually typed when it
+differed from the plan, and for a failure the full output plus any run or task ID. Severity guide:
 
-## Out of scope
+- **Blocker**: wrong exit code from a pipeline run; runs of another test case shown for the requested one
+  (4.2); a secret value displayed anywhere; a delete that proceeds without confirmation or bypass.
+- **Major**: a documented behaviour absent, or a misleading message.
+- **Minor**: formatting.
 
-- Real-device authoring beyond J18; performance under very large organisations (>1000 cases); the spec-kit
-  tooling and skills; the pending sauce-docs documentation.
+File blockers against PR #1100 before merge. Do not file the two known gaps (1.4 and 8.9); they are
+already tracked.
