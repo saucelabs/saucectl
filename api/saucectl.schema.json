@@ -5082,6 +5082,10 @@
                         "description": "W3C WebDriver capabilities, passed through unchanged, e.g. browserName, platformName, browserVersion, appium:deviceName.",
                         "type": "object",
                         "additionalProperties": true
+                      },
+                      "isRdc": {
+                        "description": "Declares the target as a real device rather than a virtual one. Optional; results are routed to the real-device table from the job the service reports, so this is only a hint.",
+                        "type": "boolean"
                       }
                     },
                     "required": [

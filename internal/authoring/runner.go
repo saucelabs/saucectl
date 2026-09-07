@@ -84,11 +84,16 @@ type runResult struct {
 // RunProject runs the project and returns the process exit code: 0 only when
 // every run passed (or was started, under Async), 1 otherwise.
 func (r *Runner) RunProject(ctx context.Context) (int, error) {
+	// The owner is deliberately not passed: runCase sends only scTunnelName,
+	// so validating with an owner would check a colleague's tunnel and then
+	// report ready for a run that fails with SC_TUNNEL_NOT_FOUND. Validate
+	// says exactly what the run will do. Validate() warns that the owner is
+	// ignored.
 	if err := tunnel.Validate(
 		ctx,
 		r.Tunnels,
 		r.Project.Sauce.Tunnel.Name,
-		r.Project.Sauce.Tunnel.Owner,
+		"",
 		tunnel.NoneFilter,
 		r.Project.DryRun,
 		r.Project.Sauce.Tunnel.Timeout,
@@ -258,6 +263,13 @@ func (r *Runner) runCase(ctx context.Context, c ResolvedCase) runResult {
 		res.EndTime = time.Now()
 		return res
 	}
+	// The run resource is polled with its own testCaseId (research R-004).
+	// If the start response omitted it, fall back to the identifier we asked
+	// with: polling an empty one 404s, and isFatalPollError treats 404 as
+	// transient, so it would burn the whole suite timeout in silence.
+	if run.TestCaseID == "" {
+		run.TestCaseID = c.TestCase.ID
+	}
 	res.Run = run
 	for _, j := range run.Jobs {
 		log.Info().
@@ -316,7 +328,7 @@ func (r *Runner) pollRun(ctx context.Context, run Run, timeout time.Duration) (R
 			}
 		case ctx.Err() != nil:
 			return run, false, ctx.Err()
-		case isFatalPollError(err):
+		case IsFatalPollError(err):
 			return run, false, fmt.Errorf("failed to poll run %s: %w", run.ID, err)
 		default:
 			log.Debug().Err(err).Str("run", run.ID).Msg("Transient error while polling run; retrying.")
@@ -332,10 +344,14 @@ func (r *Runner) pollRun(ctx context.Context, run Run, timeout time.Duration) (R
 	}
 }
 
-// isFatalPollError reports whether a poll error cannot be recovered by
+// IsFatalPollError reports whether a poll error cannot be recovered by
 // waiting: a 4xx other than 404. 404 is tolerated because a freshly started
-// run might not be readable for a moment; the deadline still bounds it.
-func isFatalPollError(err error) bool {
+// run — or a freshly accepted generation task — might not be readable for a
+// moment; the caller's deadline still bounds the retrying. Exported so the
+// generate wait applies the same classification as the run poll; two loops in
+// one feature disagreeing about which errors are fatal is how a user ends up
+// told to keep polling a task that does not exist.
+func IsFatalPollError(err error) bool {
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) {
 		return false
@@ -441,8 +457,12 @@ func (r *Runner) toTestResults(ctx context.Context, res runResult, wantJUnit boo
 	duration := res.EndTime.Sub(res.StartTime)
 
 	if len(res.Run.Jobs) == 0 {
+		// Only a start failure is a failure. An interruption, or an accepted
+		// asynchronous run whose jobs the service has not reported yet, is
+		// still in progress — reporting it as failed would contradict the
+		// zero exit code resultPassed returns under Async.
 		status := job.StateFailed
-		if res.Interrupted {
+		if res.Interrupted || (r.Async && res.Err == nil) {
 			status = job.StateInProgress
 		}
 		tr := report.TestResult{
@@ -463,7 +483,7 @@ func (r *Runner) toTestResults(ctx context.Context, res runResult, wantJUnit boo
 	out := make([]report.TestResult, 0, len(res.Run.Jobs))
 	for _, j := range res.Run.Jobs {
 		status := jobState(j)
-		browser, platform, device := describeCapabilities(j.Target.Capabilities)
+		browser, platform, device := DescribeCapabilities(j.Target.Capabilities)
 
 		tr := report.TestResult{
 			Name:       name,
@@ -520,13 +540,9 @@ func jobState(j RunJob) string {
 	}
 }
 
-// jobURL derives the dashboard link from the Sauce job identifier; the
-// service's own url field is unreliable (research R-006).
+// jobURL derives the dashboard link for one job in this runner's region.
 func (r *Runner) jobURL(sauceJobID string) string {
-	if sauceJobID == "" {
-		return ""
-	}
-	return r.Region.AppBaseURL() + "/tests/" + sauceJobID
+	return JobURL(r.Region, sauceJobID)
 }
 
 // buildURL resolves the build link through the build service by job ID,
@@ -607,23 +623,6 @@ func synthesizeJUnit(c ResolvedCase, j RunJob, status string, duration time.Dura
 
 	ts.TestCases = []junit.TestCase{tc}
 	return junit.TestSuites{TestSuites: []junit.TestSuite{ts}}
-}
-
-// describeCapabilities pulls the browser, platform and device out of the
-// free-form capabilities for the results table.
-func describeCapabilities(caps map[string]any) (browser, platform, device string) {
-	str := func(keys ...string) string {
-		for _, k := range keys {
-			if s, ok := caps[k].(string); ok && s != "" {
-				return s
-			}
-		}
-		return ""
-	}
-	browser = strings.TrimSpace(str("browserName") + " " + str("browserVersion"))
-	platform = strings.TrimSpace(str("platformName") + " " + str("appium:platformVersion", "platformVersion"))
-	device = str("appium:deviceName", "deviceName")
-	return browser, platform, device
 }
 
 // errString renders an error for a synthesized failure message.

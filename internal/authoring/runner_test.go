@@ -543,3 +543,78 @@ func TestRunner_DryRunStartsNothing(t *testing.T) {
 		t.Errorf("exit %d err %v results %d", code, err, len(rep.results))
 	}
 }
+
+func TestRunner_AsyncRunWithNoJobsIsInProgressNotFailed(t *testing.T) {
+	// A start response that carries no jobs yet is not a failure. Reporting
+	// it as failed contradicted the zero exit code Async returns, so a CI
+	// job gating on the report failed a launch that had worked.
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: "case"}, nil },
+		runTestCase: func(_ context.Context, id, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: id}, nil // accepted, no jobs reported
+		},
+	}
+	rep := &captureReporter{wantJUnit: true}
+	r := newRunner(svc, rep, newProject(Suite{Name: "s", TestCases: []string{"tc1"}}))
+	r.Async = true
+
+	code, err := r.RunProject(context.Background())
+	if err != nil || code != 0 {
+		t.Fatalf("exit %d, err %v; an accepted async launch must succeed", code, err)
+	}
+	if len(rep.results) != 1 {
+		t.Fatalf("got %d results", len(rep.results))
+	}
+	res := rep.results[0]
+	if res.Status != job.StateInProgress {
+		t.Errorf("status = %q, want %q so the report agrees with the exit code", res.Status, job.StateInProgress)
+	}
+	for _, ts := range res.Attempts[0].TestSuites.TestSuites {
+		if ts.Failures != 0 {
+			t.Errorf("synthesized JUnit reports %d failure(s) for a successful async launch", ts.Failures)
+		}
+	}
+}
+
+func TestRunner_StartFailureWithNoJobsStillFails(t *testing.T) {
+	// The counterpart: a genuine start failure stays failed even under Async.
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id}, nil },
+		runTestCase: func(context.Context, string, string, RunOptions) (Run, error) {
+			return Run{}, &APIError{HTTPStatus: 400, Code: "SC_TUNNEL_NOT_FOUND"}
+		},
+	}
+	rep := &captureReporter{}
+	r := newRunner(svc, rep, newProject(Suite{Name: "s", TestCases: []string{"tc1"}}))
+	r.Async = true
+	if code, _ := r.RunProject(context.Background()); code != 1 {
+		t.Errorf("exit = %d, want 1", code)
+	}
+	if rep.results[0].Status != job.StateFailed {
+		t.Errorf("status = %q, want failed", rep.results[0].Status)
+	}
+}
+
+func TestRunner_PollsWithKnownTestCaseIDWhenStartResponseOmitsIt(t *testing.T) {
+	// An empty testCaseId would 404 forever: isFatalPollError treats 404 as
+	// transient, so the loop would burn the whole suite timeout in silence.
+	yes := true
+	var polledWith string
+	svc := &fakeService{
+		getTestCase: func(_ context.Context, id string) (TestCase, error) { return TestCase{ID: id, Name: "case"}, nil },
+		runTestCase: func(_ context.Context, _, _ string, _ RunOptions) (Run, error) {
+			return Run{ID: "run", TestCaseID: "", Jobs: []RunJob{chromeJob(nil)}}, nil
+		},
+		getRun: func(_ context.Context, testCaseID, runID string) (Run, error) {
+			polledWith = testCaseID
+			return Run{ID: runID, TestCaseID: testCaseID, Jobs: []RunJob{chromeJob(&yes)}}, nil
+		},
+	}
+	r := newRunner(svc, &captureReporter{}, newProject(Suite{Name: "s", TestCases: []string{"tc1"}, Timeout: time.Second}))
+	if code, _ := r.RunProject(context.Background()); code != 0 {
+		t.Errorf("exit = %d", code)
+	}
+	if polledWith != "tc1" {
+		t.Errorf("polled with %q, want the requested test case id", polledWith)
+	}
+}

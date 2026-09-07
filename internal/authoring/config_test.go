@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -174,5 +176,25 @@ func TestNormalizeValue(t *testing.T) {
 	a := out["a"].(map[string]any)
 	if a["2"] != "two" || a["b"].(map[string]any)["c"] != 1 {
 		t.Errorf("nested conversion wrong: %#v", out)
+	}
+}
+
+func TestSetDefaults_TruncatesBuildNameOnRuneBoundary(t *testing.T) {
+	// The cap is on characters. Slicing bytes split a rune, put invalid
+	// UTF-8 into the run request, and dropped characters that were within
+	// the limit.
+	name := strings.Repeat("日", 120) // 120 characters, 360 bytes
+	p := Project{Sauce: config.SauceConfig{Metadata: config.Metadata{Build: name}}}
+	SetDefaults(&p)
+
+	got := p.Sauce.Metadata.Build
+	if n := utf8.RuneCountInString(got); n != maxBuildNameLength {
+		t.Errorf("truncated to %d characters, want %d", n, maxBuildNameLength)
+	}
+	if !utf8.ValidString(got) {
+		t.Error("truncation produced invalid UTF-8")
+	}
+	if strings.ContainsRune(got, '�') {
+		t.Error("truncation split a rune")
 	}
 }

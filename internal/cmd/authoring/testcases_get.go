@@ -66,6 +66,13 @@ func getTestCase(ctx context.Context, out, id, revisionID string, showSteps bool
 	}
 
 	if out == JSONOutput {
+		// Narrow the document to the revision the caller pinned, otherwise
+		// --revision is computed and then thrown away and a script reading
+		// .revisions[-1] silently gets the latest instead of the one asked
+		// for. The shape stays the same, so `jq` expressions keep working.
+		if revisionID != "" && ok {
+			tc.Revisions = []authoring.Revision{rev}
+		}
 		return renderJSON(tc)
 	}
 

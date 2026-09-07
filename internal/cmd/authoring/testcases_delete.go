@@ -42,19 +42,25 @@ func deleteTestCase(ctx context.Context, id string, yes bool) error {
 		return fmt.Errorf("failed to get test case: %w", err)
 	}
 
+	// These lookups exist only to fill the prompt. With --yes there is no
+	// prompt, so issuing them would add a wasted round trip per asset on the
+	// scripted path, on top of the entitlement gate's two.
 	var affects []string
-	if tc.TestSuiteID != "" {
+	if !yes && tc.TestSuiteID != "" {
 		affects = append(affects, fmt.Sprintf("it will be removed from suite %s", tc.TestSuiteID))
 	}
 	// Observed 2026-09-06: run history outlives the test case. Runs of a
 	// deleted case still come back from the filtered list and from the run
 	// detail endpoint, so they are not lost — only orphaned.
 	zero := 0
-	runs, err := testCaseService.ListRuns(ctx, tc.ID, authoring.ListRunsOptions{ListOptions: authoring.ListOptions{Limit: &zero}})
-	if err == nil && runs.Total > 0 {
+	runs := authoring.List[authoring.Run]{}
+	if !yes {
+		runs, err = testCaseService.ListRuns(ctx, tc.ID, authoring.ListRunsOptions{ListOptions: authoring.ListOptions{Limit: &zero}})
+	}
+	if !yes && err == nil && runs.Total > 0 {
 		affects = append(affects, fmt.Sprintf("its %d recorded run(s) stay in run history but will belong to a test case that no longer exists", runs.Total))
 	}
-	if len(tc.Revisions) > 1 {
+	if !yes && len(tc.Revisions) > 1 {
 		affects = append(affects, fmt.Sprintf("all %d revisions are deleted", len(tc.Revisions)))
 	}
 

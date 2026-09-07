@@ -33,6 +33,7 @@ func TestSuitesListCommand() *cobra.Command {
 			if err := page.validate(); err != nil {
 				return err
 			}
+			page.capture(cmd.Flags())
 			items, total, err := fetchPage(cmd.Context(), page, "test suites", func(ctx context.Context, lo authoring.ListOptions) (authoring.List[authoring.TestSuite], error) {
 				opts.ListOptions = lo
 				return testSuiteService.ListTestSuites(ctx, opts)

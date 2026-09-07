@@ -90,8 +90,26 @@ func updateVariable(ctx context.Context, cmd *cobra.Command, id string, f variab
 		opts.IsSecret = &v
 		changed = true
 	}
+	// The variable is read when we need its concurrency token, and also
+	// whenever a new value is being supplied: the shell-history warning has
+	// to key off the *stored* secrecy, because rotating an existing secret
+	// with --value is precisely the case the warning exists for and
+	// --secret is not repeated on such a command.
+	needCurrent := f.expectedLastUpdate == "" || f.vs.set()
+	var current authoring.Variable
+	if needCurrent {
+		var err error
+		current, err = variableService.GetVariable(ctx, id)
+		if err != nil {
+			return fmt.Errorf("failed to read variable before updating: %w", err)
+		}
+	}
+
 	if f.vs.set() {
-		f.vs.secret = f.secret
+		f.vs.secret = current.IsSecret
+		if cmd.Flags().Changed("secret") {
+			f.vs.secret = f.vs.secret || f.secret
+		}
 		value, err := resolveValue(f.vs, os.Stdin)
 		if err != nil {
 			return err
@@ -105,10 +123,6 @@ func updateVariable(ctx context.Context, cmd *cobra.Command, id string, f variab
 
 	token := f.expectedLastUpdate
 	if token == "" {
-		current, err := variableService.GetVariable(ctx, id)
-		if err != nil {
-			return fmt.Errorf("failed to read variable before updating: %w", err)
-		}
 		token = current.LastUpdate
 	}
 	opts.ExpectedLastUpdate = token

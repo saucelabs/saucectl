@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -66,15 +67,30 @@ func downloadArtifact(cmd *cobra.Command, id, filename string, force bool) error
 	}
 	defer rc.Close()
 
-	f, err := os.Create(filename)
+	// Download to a temporary file beside the destination and rename on
+	// success. A transfer that dies half way would otherwise leave a
+	// truncated file that looks complete, and the overwrite guard above
+	// would then refuse the obvious retry of the same command.
+	dir := filepath.Dir(filename)
+	tmp, err := os.CreateTemp(dir, filepath.Base(filename)+".partial-*")
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %w", filename, err)
+		return fmt.Errorf("failed to create a temporary file in %s: %w", dir, err)
 	}
-	defer f.Close()
+	tmpName := tmp.Name()
+	defer func() {
+		tmp.Close()
+		os.Remove(tmpName) // no-op once the rename below has succeeded
+	}()
 
-	n, err := io.Copy(f, rc)
+	n, err := io.Copy(tmp, rc)
 	if err != nil {
 		return fmt.Errorf("failed to write %s: %w", filename, err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filename, err)
+	}
+	if err := os.Rename(tmpName, filename); err != nil {
+		return fmt.Errorf("failed to move the download into place at %s: %w", filename, err)
 	}
 	fmt.Printf("Wrote %d bytes to %s\n", n, filename)
 	return nil

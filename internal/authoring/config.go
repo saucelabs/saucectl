@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"unicode/utf8"
 
 	"github.com/rs/zerolog/log"
 
@@ -110,9 +111,12 @@ func SetDefaults(p *Project) {
 		p.Sauce.Tunnel.Timeout = defaultTunnelTimeout
 	}
 	p.Sauce.Metadata.SetDefaultBuild()
-	if len(p.Sauce.Metadata.Build) > maxBuildNameLength {
+	// The service's cap is on characters, so count runes: slicing bytes
+	// splits a multi-byte rune and puts invalid UTF-8 in the run request,
+	// while also dropping characters that were within the limit.
+	if utf8.RuneCountInString(p.Sauce.Metadata.Build) > maxBuildNameLength {
 		log.Warn().Msgf("Build name exceeds %d characters and will be truncated for AI authoring runs.", maxBuildNameLength)
-		p.Sauce.Metadata.Build = p.Sauce.Metadata.Build[:maxBuildNameLength]
+		p.Sauce.Metadata.Build = string([]rune(p.Sauce.Metadata.Build)[:maxBuildNameLength])
 	}
 
 	for i := range p.Suites {

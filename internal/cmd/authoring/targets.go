@@ -153,32 +153,16 @@ func parseJSONTarget(raw string) (authoring.Target, error) {
 
 // describeTarget renders a target as a short label for tables and logs,
 // e.g. "chrome latest / Windows 11" or "Google Pixel 9 Emulator / Android 16".
+// The capability lookup itself is shared with the runner's results table via
+// authoring.DescribeCapabilities, so both describe a target the same way.
 func describeTarget(t authoring.Target) string {
-	caps := t.Capabilities
-	str := func(keys ...string) string {
-		for _, k := range keys {
-			if v, ok := caps[k]; ok {
-				if s, ok := v.(string); ok && s != "" {
-					return s
-				}
-			}
-		}
-		return ""
-	}
-
-	device := str("appium:deviceName", "deviceName")
-	browser := strings.TrimSpace(str("browserName") + " " + str("browserVersion"))
-	platform := strings.TrimSpace(str("platformName") + " " + str("appium:platformVersion", "platformVersion"))
+	browser, platform, device := authoring.DescribeCapabilities(t.Capabilities)
 
 	var parts []string
-	if device != "" {
-		parts = append(parts, device)
-	}
-	if browser != "" {
-		parts = append(parts, browser)
-	}
-	if platform != "" {
-		parts = append(parts, platform)
+	for _, p := range []string{device, browser, platform} {
+		if p != "" {
+			parts = append(parts, p)
+		}
 	}
 	if len(parts) == 0 {
 		return "-"
