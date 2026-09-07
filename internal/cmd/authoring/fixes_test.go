@@ -154,3 +154,141 @@ func captureStdout(t *testing.T, fn func()) string {
 	os.Stdout = orig
 	return <-done
 }
+
+func TestWaitForGeneration_FailedTaskExitsNonZeroInJSONMode(t *testing.T) {
+	// The JSON branch used to return before the status switch, so a FAILED
+	// task printed its payload and exited 0, breaking CI gating with -o json.
+	testCaseService = &mocks.AuthoringService{
+		GenerationStatusFn: func(context.Context, string) (authoring.GenerationState, error) {
+			return authoring.GenerationState{
+				Status: authoring.GenerationFailed,
+				Error:  &authoring.GenerationError{Code: "TEST_CASE_EMPTY", Detail: "nothing was recorded"},
+			}, nil
+		},
+	}
+	t.Cleanup(func() { testCaseService = nil })
+
+	var err error
+	out := captureStdout(t, func() {
+		err = waitForGeneration(context.Background(), "task", time.Millisecond, time.Second, JSONOutput, io.Discard)
+	})
+	if err == nil {
+		t.Fatal("a FAILED task must return an error so the process exits non-zero")
+	}
+	if !strings.Contains(err.Error(), "TEST_CASE_EMPTY") {
+		t.Errorf("error lost the service's code: %v", err)
+	}
+	// The payload still has to reach a script that asked for JSON.
+	var doc map[string]any
+	if e := json.Unmarshal([]byte(out), &doc); e != nil {
+		t.Fatalf("no JSON object was printed: %v\n%s", e, out)
+	}
+	if doc["status"] != "FAILED" || doc["taskId"] != "task" {
+		t.Errorf("JSON = %v; want the failed status and the task id", doc)
+	}
+}
+
+func TestWaitForGeneration_TimeoutSurfacesTaskIDInBothFormats(t *testing.T) {
+	// Without the id there is nothing to reattach with.
+	inProgress := func(context.Context, string) (authoring.GenerationState, error) {
+		return authoring.GenerationState{Status: authoring.GenerationInProgress}, nil
+	}
+	testCaseService = &mocks.AuthoringService{GenerationStatusFn: inProgress}
+	t.Cleanup(func() { testCaseService = nil })
+
+	var buf bytes.Buffer
+	err := waitForGeneration(context.Background(), "task-42", time.Millisecond, 30*time.Millisecond, TextOutput, &buf)
+	if err == nil || !strings.Contains(err.Error(), "task-42") {
+		t.Errorf("text mode error = %v; want the task id", err)
+	}
+	if !strings.Contains(buf.String(), "task-42") {
+		t.Errorf("text mode printed no reattach hint:\n%s", buf.String())
+	}
+
+	out := captureStdout(t, func() {
+		err = waitForGeneration(context.Background(), "task-42", time.Millisecond, 30*time.Millisecond, JSONOutput, io.Discard)
+	})
+	if err == nil || !strings.Contains(err.Error(), "task-42") {
+		t.Errorf("json mode error = %v; want the task id", err)
+	}
+	var doc map[string]any
+	if e := json.Unmarshal([]byte(out), &doc); e != nil || doc["taskId"] != "task-42" {
+		t.Errorf("json mode emitted %q; want an object carrying taskId", out)
+	}
+}
+
+func TestBuildCreateScheduleOptions_RejectsUTCLocally(t *testing.T) {
+	// The service's accepted list is region/city zones only; catching these
+	// two saves a round trip and an opaque INVALID_BODY.
+	for _, tz := range []string{"UTC", "utc", "Etc/UTC"} {
+		_, err := buildCreateScheduleOptions(scheduleFlags{name: "n", cron: "0 0 3 * * *", timezone: tz, testSuiteIDs: []string{"s"}}, "me")
+		if err == nil {
+			t.Errorf("--timezone %q was accepted", tz)
+			continue
+		}
+		if !strings.Contains(err.Error(), "Atlantic/Reykjavik") {
+			t.Errorf("--timezone %q: error should name a usable zero-offset zone, got %v", tz, err)
+		}
+	}
+	if _, err := buildCreateScheduleOptions(scheduleFlags{name: "n", cron: "0 0 3 * * *", timezone: "Europe/Berlin", testSuiteIDs: []string{"s"}}, "me"); err != nil {
+		t.Errorf("a region/city zone must be accepted: %v", err)
+	}
+}
+
+func TestBuildUpdateScheduleOptions_SetAndUnsetConflict(t *testing.T) {
+	// The unset loop ran last and silently won.
+	current := authoring.TestSchedule{
+		Name:         "n",
+		State:        authoring.ScheduleState{StateName: authoring.ScheduleEnabled},
+		TestSuiteIDs: []string{"s1"},
+		Settings:     authoring.ScheduleSettings{Cron: "c", Timezone: "Europe/Berlin", RunningUserID: "u"},
+	}
+	cases := []struct{ flag, field string }{
+		{"tunnel-name", "tunnelName"},
+		{"build", "buildName"},
+		{"start-date", "startDate"},
+		{"end-date", "endDate"},
+		{"max-runs", "maxRuns"},
+	}
+	for _, c := range cases {
+		f := scheduleUpdateFlags{unset: []string{c.field}}
+		_, err := buildUpdateScheduleOptions(changedSet{c.flag: true}, f, current)
+		if err == nil {
+			t.Errorf("--%s with --unset %s was accepted", c.flag, c.field)
+			continue
+		}
+		if !strings.Contains(err.Error(), c.flag) || !strings.Contains(err.Error(), c.field) {
+			t.Errorf("--%s/--unset %s: error should name both, got %v", c.flag, c.field, err)
+		}
+	}
+	// Unsetting a field nobody set is still fine.
+	if _, err := buildUpdateScheduleOptions(changedSet{}, scheduleUpdateFlags{unset: []string{"buildName"}}, current); err != nil {
+		t.Errorf("unset alone must work: %v", err)
+	}
+}
+
+func TestFetchPage_WarningsAreSuppressedUnderJSON(t *testing.T) {
+	// The logger writes to stdout for every command, so a warning emitted
+	// while rendering JSON lands inside the document and breaks `| jq`.
+	fs := pflag.NewFlagSet("t", pflag.ContinueOnError)
+	fs.StringP("out", "o", TextOutput, "")
+	p := &pageFlags{}
+	p.bind(fs)
+	if err := fs.Parse([]string{"--all", "--limit", "5", "-o", "json"}); err != nil {
+		t.Fatal(err)
+	}
+	p.capture(fs)
+	if !p.jsonOut {
+		t.Error("JSON output must be recorded so advisory warnings can be held back")
+	}
+
+	fs2 := pflag.NewFlagSet("t2", pflag.ContinueOnError)
+	fs2.StringP("out", "o", TextOutput, "")
+	p2 := &pageFlags{}
+	p2.bind(fs2)
+	_ = fs2.Parse([]string{"--all", "--limit", "5"})
+	p2.capture(fs2)
+	if p2.jsonOut {
+		t.Error("text output must still warn")
+	}
+}
