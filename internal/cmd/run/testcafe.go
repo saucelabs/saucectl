@@ -153,7 +153,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.USEast4 {
+	if regio == region.USEast4 || regio == region.AsiaSouth2 {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 

@@ -208,7 +208,7 @@ func Validate(p Project) error {
 		if err := validateEmulators(suite.Name, suite.Emulators); err != nil {
 			return err
 		}
-		if regio == region.USEast4 && len(suite.Emulators) > 0 {
+		if (regio == region.USEast4 || regio == region.AsiaSouth2) && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
 		}
 		if p.Sauce.Retries < suite.PassThreshold-1 {
