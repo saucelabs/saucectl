@@ -122,7 +122,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 	}
 
 	regio := region.FromString(p.GetSauceCfg().Region)
-	if regio == region.USEast4 {
+	if regio == region.USEast4 || regio == region.AsiaSouth2 {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 

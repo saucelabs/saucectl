@@ -48,6 +48,9 @@ const USEast4 Region = "us-east-4"
 // EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
 const EUCentral1 Region = "eu-central-1"
 
+// AsiaSouth2 is a sauce labs region in India, aka asia-south-2.
+const AsiaSouth2 Region = "asia-south-2"
+
 // Staging is a sauce labs internal pre-production environment.
 const Staging Region = "staging"
 
@@ -80,6 +83,13 @@ var sauceRegionMetas = []regionMeta{
 		"https://api.eu-central-1.saucelabs.com",
 		"https://app.eu-central-1.saucelabs.com",
 		"https://ondemand.eu-central-1.saucelabs.com",
+		defaultCreds,
+	},
+	{
+		AsiaSouth2.String(),
+		"https://api.asia-south-2.saucelabs.com",
+		"https://app.asia-south-2.saucelabs.com",
+		"https://ondemand.asia-south-2.saucelabs.com",
 		defaultCreds,
 	},
 	{
