@@ -1,0 +1,56 @@
+{
+  "skill_name": "manual-test-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write the manual test plan for PR #1100 (AI Test Authoring, branch 001-ai-test-authoring, specs under specs/001-ai-test-authoring/). QA will run it before merge.",
+      "expected_output": "A step-by-step plan at least as complete as specs/001-ai-test-authoring/manual-test-plan.md: numbered scenarios with exact commands and observable expected output, ordered so assets are created before use and deleted in a confirmation-matrix part, regression scenarios for the schema bundle and run dispatch, the two known gaps (dynamic --target completion, bad-credentials wording) rediscovered or carried over, no coverage or priority columns, no mutating command executed and no commit made while generating it.",
+      "files": [],
+      "expectations": [
+        "Every scenario is a `### N.M Title` section with exact commands (a numbered **Steps** list, or a validation table with one command per row) and observable expected results (an **Expected** list, or an Expected column): strings, exit codes, files or counts \u2014 never 'works' or 'succeeds'. There are at least 40 such scenarios.",
+        "The plan has no Coverage, Priority or 'already verified' column or tier and never tells the tester that a scenario may be skipped; everything is to be executed.",
+        "The plan opens with a setup part (build the binary, credentials sanity check, exported shell variables and a naming convention for throwaway assets) and closes with a nothing-left-behind check that searches every asset type by that convention and expects zero.",
+        "The plan includes regression scenarios for the shared surfaces the PR changed: `make schema` producing a byte-identical bundle (`git status --short api/` prints nothing) and a dry-run of another kind's fixture such as .sauce/playwright.yml still dispatching and validating.",
+        "The plan contains a confirmation-matrix part that, for each of test case, test suite, schedule and variable, exercises an interactive decline, a non-interactive refusal without --yes (stdin from /dev/null), and deletion with --yes.",
+        "Quoted CLI messages are real: for a sample of at least ten quoted error/success strings, a stable fragment of each is found in the repository source under internal/ or cmd/ (or the plan cites an observed run).",
+        "Referenced commands and flags exist: for a sample of at least ten `saucectl authoring \u2026` commands and flags in the plan, `--help` lists them.",
+        "The plan records the two known gaps as expected current behaviour: dynamic shell completion for `testcases code --target` offers nothing, and bad credentials are reported as 'could not verify \u2026 the current user has no organisation'. (Rediscovering them independently also passes.)",
+        "Every shell placeholder used in a scenario ($TC, $TC2, $SUITE, $SCHED, $VAR \u2026) is recorded by an earlier scenario or the setup part before its first use; renames or deletes of an asset happen after its last use.",
+        "No remote mutating command (create/update/delete/run/generate) and no git commit or push happened during generation: notes.md and the transcript show only read-only probes, HEAD is unchanged, and the plan file was written under the run's outputs directory rather than into the repository."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Need a manual test plan for commit 50b4399 (fix CI version stamping and the schema make target).",
+      "expected_output": "A short plan with no invented scenarios: check the PR build job log for 'Running version v0.0.0+<sha>' rather than 0.0.0+unknown, run make schema under /bin/sh on macOS and Linux without a pushd error, confirm the bundle is byte-identical (git status shows nothing under api/), and a note that local builds still print 0.0.0+unknown by design. Nothing about AI authoring.",
+      "files": [],
+      "expectations": [
+        "Every scenario is a `### N.M Title` section with exact commands (a numbered **Steps** list, or a validation table with one command per row) and observable expected results (an **Expected** list, or an Expected column): strings, exit codes, files or counts \u2014 never 'works' or 'succeeds'.",
+        "Includes a scenario that checks a CI build job log for `Running version v0.0.0+<sha>` rather than `0.0.0+unknown`.",
+        "Includes a scenario that runs `make schema` under a POSIX `sh` (the Makefile no longer uses `pushd`) and checks that `git status --short api/` prints nothing.",
+        "States that local builds print `0.0.0+unknown` by design so the tester does not report it as a defect.",
+        "Contains no AI-authoring content: no `saucectl authoring` commands and no `kind: authoring` configuration.",
+        "Has at most 15 scenario sections: a two-file infrastructure fix gets a short plan.",
+        "The plan has no Coverage, Priority or 'already verified' column or tier and never tells the tester that a scenario may be skipped; everything is to be executed.",
+        "No remote mutating command (create/update/delete/run/generate) and no git commit or push happened during generation: notes.md and the transcript show only read-only probes, HEAD is unchanged, and the plan file was written under the run's outputs directory rather than into the repository."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're adding cypress 15.19 and playwright 1.62 to the schema like PR #1095 did. Give me the manual test plan QA should run.",
+      "expected_output": "Scenarios that edit only the per-framework version enums: dry-runs of .sauce/cypress-10.yml and .sauce/playwright.yml with the new versions accepted and an unlisted version producing the advisory validation error, make schema reproducing a byte-identical bundle, dry-runs of the other kinds' fixtures showing no new validation errors, and the note that validation reads the bundle from main so the new versions only validate locally after merge. It must not bring in the four-file platformName duplication, which concerns macOS/Windows values rather than versions.",
+      "files": [],
+      "expectations": [
+        "Every scenario is a `### N.M Title` section with exact commands (a numbered **Steps** list, or a validation table with one command per row) and observable expected results (an **Expected** list, or an Expected column): strings, exit codes, files or counts \u2014 never 'works' or 'succeeds'.",
+        "Identifies the per-framework `version` enums as the thing that changes (api/v1/framework/cypress.schema.json and api/v1alpha/framework/playwright.schema.json) and does not ask for edits to any platformName enum.",
+        "Includes dry-runs of .sauce/cypress-10.yml and .sauce/playwright.yml with the new versions expecting acceptance, and with an unlisted version expecting the advisory validation error.",
+        "Includes `make schema` followed by `git status --short api/` printing nothing (byte-identical bundle).",
+        "Includes regression dry-runs of the other kinds' .sauce fixtures expecting no validation errors that main did not already print.",
+        "States that configuration validation reads the bundle published from main, so the new versions validate locally only after the change merges.",
+        "Does not include a scenario about the four-file platformName duplication (macOS/Windows values), which a version bump does not touch.",
+        "The plan has no Coverage, Priority or 'already verified' column or tier and never tells the tester that a scenario may be skipped; everything is to be executed.",
+        "No remote mutating command (create/update/delete/run/generate) and no git commit or push happened during generation: notes.md and the transcript show only read-only probes, HEAD is unchanged, and the plan file was written under the run's outputs directory rather than into the repository."
+      ]
+    }
+  ]
+}

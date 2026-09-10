@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "saucectl AI Test Authoring runner configuration",
+  "description": "Configuration file for running Sauce Labs AI-authored tests using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/artifacts.schema.json"
+    },
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    },
+    {
+      "$ref": "../subschema/reporters.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "authoring"
+    },
+    "defaults": {
+      "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        }
+      },
+      "additionalProperties": false
+    },
+    "suites": {
+      "description": "The set of AI-authored test cases to run. Each entry references a test suite by ID or exact name, or lists test cases explicitly.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the suite, which will be reflected in the test results.",
+            "type": "string"
+          },
+          "testSuiteId": {
+            "description": "The ID of the AI Test Authoring test suite whose test cases to run.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F-]{32,36}$"
+          },
+          "testSuiteName": {
+            "description": "The exact name of the AI Test Authoring test suite whose test cases to run. Resolved at run time; an ambiguous name is an error.",
+            "type": "string"
+          },
+          "testCases": {
+            "description": "Explicit list of test case IDs to run.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          },
+          "tags": {
+            "description": "Only run test cases of the referenced suite that carry at least one of these tags. Ignored when testCases is set.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targets": {
+            "description": "Browsers or devices to run against, overriding each test case's stored run targets. When omitted, the stored targets apply.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "capabilities": {
+                  "description": "W3C WebDriver capabilities, passed through unchanged, e.g. browserName, platformName, browserVersion, appium:deviceName.",
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "isRdc": {
+                  "description": "Declares the target as a real device rather than a virtual one. Optional; results are routed to the real-device table from the job the service reports, so this is only a hint.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "capabilities"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "timeout": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "testSuiteId"
+            ]
+          },
+          {
+            "required": [
+              "testSuiteName"
+            ]
+          },
+          {
+            "required": [
+              "testCases"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "suites"
+  ],
+  "additionalProperties": true
+}
