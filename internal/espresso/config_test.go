@@ -152,6 +152,52 @@ func TestValidateThrowsErrors(t *testing.T) {
 			},
 			expectedErr: errors.New("missing platform versions for emulator: Android GoogleApi Emulator. Suite name: no emulator device name. Emulators index: 0"),
 		},
+		{
+			// asia-south-2 (India) is real-device-only: its platform list is
+			// empty, so emulator suites must be rejected before any upload.
+			name: "validating throws error on emulators in asia-south-2",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "asia-south-2"},
+				Espresso: Espresso{
+					App:     appAPK,
+					TestApp: appAPK,
+				},
+				Suites: []Suite{
+					{
+						Name: "emulator suite",
+						Emulators: []config.Emulator{
+							{
+								Name:             "Android GoogleApi Emulator",
+								PlatformVersions: []string{"11.0"},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("emulators are currently not supported in your specified region"),
+		},
+		{
+			name: "validating throws error on emulators in us-east-4",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-east-4"},
+				Espresso: Espresso{
+					App:     appAPK,
+					TestApp: appAPK,
+				},
+				Suites: []Suite{
+					{
+						Name: "emulator suite",
+						Emulators: []config.Emulator{
+							{
+								Name:             "Android GoogleApi Emulator",
+								PlatformVersions: []string{"11.0"},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("emulators are currently not supported in your specified region"),
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

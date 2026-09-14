@@ -90,7 +90,7 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	p.Suites = ss
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.USEast4 {
+	if regio == region.USEast4 || regio == region.AsiaSouth2 {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 

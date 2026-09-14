@@ -130,7 +130,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.USEast4 {
+	if regio == region.USEast4 || regio == region.AsiaSouth2 {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
