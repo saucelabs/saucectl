@@ -62,3 +62,38 @@ suites:
 		t.Errorf("NetworkConditions mismatch: %s", diff)
 	}
 }
+
+func TestValidate_Env(t *testing.T) {
+	dir := fs.NewDir(t, "xctest-config",
+		fs.WithFile("test.ipa", "", fs.WithMode(0655)),
+		fs.WithFile("test.xctestrun", "", fs.WithMode(0655)))
+	defer dir.Remove()
+	appF := filepath.Join(dir.Path(), "test.ipa")
+	xcTestRunFileF := filepath.Join(dir.Path(), "test.xctestrun")
+
+	newProject := func(env map[string]string) Project {
+		return Project{
+			Sauce: config.SauceConfig{Region: "us-west-1"},
+			Suites: []Suite{
+				{
+					Name:          "iphone",
+					App:           appF,
+					XCTestRunFile: xcTestRunFileF,
+					Env:           env,
+					Devices: []config.Device{
+						{Name: "iPhone.*"},
+					},
+				},
+			},
+		}
+	}
+
+	err := Validate(newProject(map[string]string{"": "some-value"}))
+	assert.EqualError(t, err, `suite "iphone": environment variable has an empty name`)
+
+	err = Validate(newProject(map[string]string{"WIDGETS_ENDPOINT": ""}))
+	assert.EqualError(t, err, `suite "iphone": environment variable "WIDGETS_ENDPOINT" has an empty value; check that any referenced variables (e.g. $WIDGETS_ENDPOINT) are set in your environment`)
+
+	err = Validate(newProject(map[string]string{"WIDGETS_ENDPOINT": "https://example.com"}))
+	assert.NoError(t, err)
+}

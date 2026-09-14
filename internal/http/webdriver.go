@@ -73,8 +73,10 @@ type SauceOpts struct {
 }
 
 type env struct {
-	Name  string `json:"name,omitempty"`
-	Value string `json:"value,omitempty"`
+	// Name and Value must not use omitempty: the backend requires both fields
+	// to be present and crashes the job on entries like {"name": "FOO"}.
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 // Batch represents capabilities for batch frameworks.

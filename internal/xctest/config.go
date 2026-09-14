@@ -247,6 +247,18 @@ func Validate(p Project) error {
 			return err
 		}
 
+		for name, value := range suite.Env {
+			if name == "" {
+				return fmt.Errorf("suite %q: environment variable has an empty name", suite.Name)
+			}
+			if value == "" {
+				return fmt.Errorf(
+					"suite %q: environment variable %q has an empty value; check that any referenced variables (e.g. $%s) are set in your environment",
+					suite.Name, name, name,
+				)
+			}
+		}
+
 		for _, app := range suite.OtherApps {
 			if err := apps.Validate("other application", app, validAppExt); err != nil {
 				return err

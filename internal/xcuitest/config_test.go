@@ -95,6 +95,42 @@ func TestValidate(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "validating throws error on env var with empty name",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
+				Suites: []Suite{
+					{
+						Name:    "iphone",
+						App:     appF,
+						TestApp: testAppF,
+						Env:     map[string]string{"": "some-value"},
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(`suite "iphone": environment variable has an empty name`),
+		},
+		{
+			name: "validating throws error on env var with empty value",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
+				Suites: []Suite{
+					{
+						Name:    "iphone",
+						App:     appF,
+						TestApp: testAppF,
+						Env:     map[string]string{"WIDGETS_ENDPOINT": ""},
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New(`suite "iphone": environment variable "WIDGETS_ENDPOINT" has an empty value; check that any referenced variables (e.g. $WIDGETS_ENDPOINT) are set in your environment`),
+		},
+		{
 			name: "validating passing with .app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
