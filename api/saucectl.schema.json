@@ -4878,7 +4878,8 @@
                     "enum": [
                       "us-west-1",
                       "us-east-4",
-                      "eu-central-1"
+                      "eu-central-1",
+                      "asia-south-2"
                     ]
                   },
                   "sauceignore": {
