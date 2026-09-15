@@ -16,7 +16,7 @@ jobs:
       version: ${{ steps.set_version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Release Version
         id: set_version
         run: |
@@ -27,17 +27,17 @@ jobs:
       - name: Check Release Version
         run: echo ${{ env.RELEASE_VERSION }}
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v6
         with:
           images: saucelabs/saucectl
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v7
         env:
           LD_1: -X 'github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}'
           LD_2: -X 'github.com/saucelabs/saucectl/internal/version.GitCommit=${{ github.sha }}'
