@@ -14,6 +14,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -96,7 +97,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	flags := cmd.PersistentFlags()
 
 	flags.BoolVar(&noPrompt, "no-prompt", false, "Disable interactive prompts.")
-	flags.StringVarP(&regionName, "region", "r", "", "Sauce Labs region. Options: us-west-1, eu-central-1.")
+	flags.StringVarP(&regionName, "region", "r", "", fmt.Sprintf("Sauce Labs region. Options: %s.", region.Options()))
 
 	return cmd
 }
