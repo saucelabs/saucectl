@@ -7,7 +7,7 @@
 // Everything about the remote service that this package encodes was verified
 // against the live API rather than taken from its published specification —
 // several observed behaviours contradict that specification and are recorded
-// where the affected code lives (see specs/001-ai-test-authoring/research.md).
+// where the affected code lives.
 package authoring
 
 import (
