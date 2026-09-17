@@ -21,7 +21,7 @@
     },
     {
       "id": 2,
-      "prompt": "Need a manual test plan for commit 50b4399 (fix CI version stamping and the schema make target).",
+      "prompt": "Need a manual test plan for the commit that fixed CI version stamping and the schema make target.",
       "expected_output": "A short plan with no invented scenarios: check the PR build job log for 'Running version v0.0.0+<sha>' rather than 0.0.0+unknown, run make schema under /bin/sh on macOS and Linux without a pushd error, confirm the bundle is byte-identical (git status shows nothing under api/), and a note that local builds still print 0.0.0+unknown by design. Nothing about AI authoring.",
       "files": [],
       "expectations": [

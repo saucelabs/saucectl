@@ -42,9 +42,9 @@ go build -ldflags="\
   ./cmd/saucectl
 ```
 
-The build job in `.github/workflows/test.yml` stamps `github.com/saucelabs/saucectl/cli/version.*`,
-but no `cli/` package exists - the real one is `internal/version`. Go ignores `-X` for symbols it
-cannot find, so CI's stamping silently does nothing. Copy `.goreleaser.yml`, not CI.
+The build job in `.github/workflows/test.yml` stamps the same symbols with `-X`. Keep that import
+path in sync with `internal/version/version.go`: Go silently ignores `-X` for symbols it cannot
+find, so a wrong path yields unstamped binaries with no error and no failing job.
 
 ## Running the CLI requires credentials - even for --dry-run
 
