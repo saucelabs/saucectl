@@ -1,6 +1,7 @@
 package region
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -69,6 +70,25 @@ func TestString(t *testing.T) {
 	name := "staging"
 	r := FromString(name)
 	assert.Equal(t, name, r.String())
+}
+
+// TestOptions guards the list of regions the CLI advertises. Options derives
+// it from sauceRegionMetas so help text and error messages cannot fall behind
+// the table, which is what happened when asia-south-2 was added. Adding a
+// public region is meant to fail this test: update the want string once you
+// have confirmed the region should be advertised.
+func TestOptions(t *testing.T) {
+	// Options advertises the built-in public regions, so a user's
+	// ~/.sauce/regions.yml must not leak into it.
+	saved := userRegionMetas
+	defer func() { userRegionMetas = saved }()
+	userRegionMetas = []regionMeta{{Name: "my-own-region"}}
+
+	got := Options()
+
+	assert.Equal(t, "us-west-1, us-east-4, eu-central-1, asia-south-2", got)
+	assert.Assert(t, !strings.Contains(got, Staging.String()))
+	assert.Assert(t, !strings.Contains(got, "my-own-region"))
 }
 
 // TestRegionURLs guards the sauceRegionMetas table. Its entries are unkeyed
