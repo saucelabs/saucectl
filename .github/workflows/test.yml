@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -34,10 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -49,12 +49,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: scripts/json-schema-bundler/package-lock.json
 
@@ -75,10 +75,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -92,7 +92,7 @@ jobs:
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Check GoReleaser Config
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           # Pinned to the v2.15 line: GoReleaser v2.16.0 turned the deprecated
           # `brews` block (see .goreleaser.yml) into a hard error, which fails
@@ -103,7 +103,7 @@ jobs:
           args: check
 
       - name: Upload Binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: saucectlbin
           path: |
@@ -116,10 +116,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -135,10 +135,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -157,10 +157,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -179,10 +179,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -201,10 +201,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -235,10 +235,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -268,10 +268,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -304,10 +304,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -337,10 +337,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
@@ -359,10 +359,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: saucectlbin
 
