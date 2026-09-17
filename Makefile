@@ -39,6 +39,5 @@ coverage:
 schema:
 	$(eval INPUT_SCHEMA := $(shell pwd)/api/global.schema.json)
 	$(eval OUTPUT_SCHEMA := $(shell pwd)/api/saucectl.schema.json)
-	pushd scripts/json-schema-bundler/ && \
-	npm run bundle -- -s $(INPUT_SCHEMA) -o $(OUTPUT_SCHEMA) && \
-	popd
+	cd scripts/json-schema-bundler/ && \
+	npm run bundle -- -s $(INPUT_SCHEMA) -o $(OUTPUT_SCHEMA)
