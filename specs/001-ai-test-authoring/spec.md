@@ -299,7 +299,11 @@ path.
 - **SC-010**: An engineer already familiar with the tool's other commands can use these without new
   concepts — flag names, output choices and result formatting match what they already know.
 - **SC-011**: Concurrent execution honours the configured limit, so a run cannot exhaust the
-  organisation's capacity unintentionally.
+  organisation's capacity unintentionally. The limit counts Sauce jobs rather than runs, because one
+  run starts one job per target. One exception, deliberate: a single test case whose target count
+  exceeds the limit runs on its own but still starts every one of its jobs, so the ceiling is
+  exceeded for the duration of that case. Capping its weight at the limit is what lets it run at
+  all — a case needing more slots than exist could otherwise never acquire them.
 - **SC-012**: No shared asset can be removed without either an explicit confirmation or an explicit
   bypass — verified across all four asset types, interactively and non-interactively.
 

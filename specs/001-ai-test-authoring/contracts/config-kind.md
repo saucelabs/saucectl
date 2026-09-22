@@ -68,7 +68,7 @@ hard error rather than "first result wins".
 |---|---|---|
 | `sauce.metadata.build` | `buildName` | defaults to `build-<timestamp>`; **truncated to 100 characters** — the per-case run endpoint caps at 100, the suite endpoint at 255 |
 | `sauce.tunnel.name` | `scTunnelName` | validated for readiness with the no-op tunnel filter, **not** the v2alpha filter, which exists only for API testing |
-| `sauce.concurrency` | worker pool size | |
+| `sauce.concurrency` | worker pool size, counted in Sauce jobs | |
 | `suites[].targets[].capabilities` | `targets[].capabilities` | passed through untouched |
 | `suites[].timeout`, `defaults.timeout` | poll deadline | per-suite, passed as an argument — never stored globally |
 
@@ -94,7 +94,9 @@ this kind cannot honour — which is why the warnings above must live in `Valida
 2. Resolve every suite to a concrete list of test cases.
 3. Under `--dry-run`, print the resolved cases and stop — resolution is read-only, so a dry run can show
    exactly what would execute.
-4. Start one run per test case, bounded by `sauce.concurrency`.
+4. Start one run per test case, bounded by `sauce.concurrency`. The bound counts Sauce jobs, not
+   runs: a case is weighted by the number of targets it will start. A case weighing more than the
+   whole limit runs alone, and exceeds the limit for its duration.
 5. Poll each run to completion, bounded by the suite timeout.
 6. Emit **one result per job** — one per browser or device, not one per suite.
 7. Render through the shared reporters; return `0` only when every result passed.

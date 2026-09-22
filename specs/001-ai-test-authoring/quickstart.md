@@ -144,7 +144,7 @@ asynchronously.
 | Multi-target suite | one result row per browser or device, not one per suite (FR-003) |
 | Result links | every row's link opens the corresponding job |
 | Build grouping | all results share the configured build name (FR-007) |
-| Concurrency | never more in flight than configured (SC-011) |
+| Concurrency | never more jobs in flight than configured, except a single case whose targets exceed the limit, which runs alone (SC-011) |
 | Asynchronous | returns zero and does not wait (FR-009) |
 | Unsupported settings | adding retries or tags to the config produces warnings, not silence (FR-013) |
 | Interruption | reports work still running rather than reporting failure |
