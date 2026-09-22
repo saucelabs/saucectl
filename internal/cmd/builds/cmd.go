@@ -2,6 +2,7 @@ package builds
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/build"
@@ -54,7 +55,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
+	flags.StringVarP(&regio, "region", "r", "us-west-1", fmt.Sprintf("The Sauce Labs region. Options: %s.", region.Options()))
 
 	cmd.AddCommand(
 		GetCommand(),

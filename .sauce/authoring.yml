@@ -1,0 +1,32 @@
+apiVersion: v1alpha
+kind: authoring
+sauce:
+  region: us-west-1
+  concurrency: 2
+  metadata:
+    build: "saucectl authoring $BUILD_ID"
+defaults:
+  timeout: 15m
+suites:
+  # AI-authored test cases live in the service, not in this repository, so
+  # there is no id that works for every reader: substitute one of your own,
+  # from `saucectl authoring testcases list`, or reference a suite by name
+  # with `testSuiteName:` instead. Omit `targets` to use the case's stored ones.
+  - name: "saucedemo checkout on Chrome"
+    testCases: [<your-test-case-id>]
+    targets:
+      - capabilities:
+          browserName: chrome
+          browserVersion: latest
+          platformName: "Windows 11"
+artifacts:
+  download:
+    when: fail
+    match:
+      - "*.mp4"
+      - log.json
+    directory: ./artifacts/
+reporters:
+  junit:
+    enabled: true
+    filename: saucectl-authoring-report.xml

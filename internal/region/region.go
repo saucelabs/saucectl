@@ -3,6 +3,7 @@ package region
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -160,6 +161,23 @@ func FromString(s string) Region {
 		return Region(s)
 	}
 	return None
+}
+
+// Options returns the public Sauce Labs regions as a comma separated list, in
+// declaration order, for use in help text and error messages. None is not a
+// region and Staging is internal to Sauce Labs, so neither is advertised.
+// User defined regions are omitted too, since they are not options this
+// binary can suggest.
+func Options() string {
+	var names []string
+	for _, m := range sauceRegionMetas {
+		if m.Name == None.String() || m.Name == Staging.String() {
+			continue
+		}
+		names = append(names, m.Name)
+	}
+
+	return strings.Join(names, ", ")
 }
 
 func lookupMeta(r Region) regionMeta {

@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/authoring"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
@@ -30,6 +31,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/report/github"
@@ -50,6 +52,7 @@ var (
 	buildTimeout        = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
+	authoringTimeout    = 2 * time.Minute
 
 	typeDef config.TypeDef
 
@@ -102,7 +105,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure")
 	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s', '30m' etc.")
 	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "upload-timeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s', '30m' etc.")
-	sc.StringP("region", "r", "sauce::region", "", "The sauce labs region. Options: us-west-1, eu-central-1.")
+	sc.StringP("region", "r", "sauce::region", "", fmt.Sprintf("The sauce labs region. Options: %s.", region.Options()))
 	sc.StringToStringP("env", "e", "envFlag", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported for RDC or Espresso on virtual devices!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
@@ -218,6 +221,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == apitest.Kind {
 		return runApitest(cmd, false)
+	}
+	if typeDef.Kind == authoring.Kind {
+		return runAuthoring(cmd, false)
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
