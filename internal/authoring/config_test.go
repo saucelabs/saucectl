@@ -1,6 +1,7 @@
 package authoring
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -8,6 +9,9 @@ import (
 	"testing"
 	"time"
 	"unicode/utf8"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -196,5 +200,46 @@ func TestSetDefaults_TruncatesBuildNameOnRuneBoundary(t *testing.T) {
 	}
 	if strings.ContainsRune(got, '�') {
 		t.Error("truncation split a rune")
+	}
+}
+
+// TestValidateWarnsWhenTargetsExceedConcurrency guards the warning that tells a
+// user their suite will put more jobs in flight than sauce.concurrency allows.
+// The limit counts jobs and a case starts one per target, so the two numbers
+// are only comparable once both are known — which is here.
+func TestValidateWarnsWhenTargetsExceedConcurrency(t *testing.T) {
+	target := Target{Capabilities: map[string]interface{}{"browserName": "chrome"}}
+
+	project := func(targets int, ccy int) Project {
+		p := Project{
+			Sauce:  config.SauceConfig{Region: "us-west-1", Concurrency: ccy},
+			Suites: []Suite{{Name: "s", TestCases: []string{"tc"}}},
+		}
+		for i := 0; i < targets; i++ {
+			p.Suites[0].Targets = append(p.Suites[0].Targets, target)
+		}
+		return p
+	}
+
+	var buf bytes.Buffer
+	restore := log.Logger
+	log.Logger = zerolog.New(&buf)
+	defer func() { log.Logger = restore }()
+
+	// Over the limit: warn, but still valid.
+	if err := Validate(project(3, 1)); err != nil {
+		t.Fatalf("Validate() = %v, want nil", err)
+	}
+	if !strings.Contains(buf.String(), "declares 3 targets but sauce.concurrency is 1") {
+		t.Errorf("no warning for 3 targets under concurrency 1: %s", buf.String())
+	}
+
+	// Within the limit: silent.
+	buf.Reset()
+	if err := Validate(project(2, 4)); err != nil {
+		t.Fatalf("Validate() = %v, want nil", err)
+	}
+	if strings.Contains(buf.String(), "sauce.concurrency") {
+		t.Errorf("unexpected warning for 2 targets under concurrency 4: %s", buf.String())
 	}
 }

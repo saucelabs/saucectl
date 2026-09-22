@@ -188,6 +188,18 @@ func Validate(p Project) error {
 			return fmt.Errorf("suite name %q is used more than once", s.Name)
 		}
 		seen[s.Name] = true
+
+		// One test case starts one job per target, and the service starts them
+		// all from a single request, so a case with more targets than the
+		// concurrency limit puts more jobs in flight than configured. Say so
+		// here, where the numbers are both in hand and the user can act on
+		// them. Cases carrying their own stored run targets cannot be checked
+		// without a request, so this catches the configured case only.
+		if n := len(s.Targets); n > p.Sauce.Concurrency {
+			log.Warn().Msgf(
+				"Suite %q declares %d targets but sauce.concurrency is %d: each test case starts one job per target, so up to %d jobs will run at once.",
+				s.Name, n, p.Sauce.Concurrency, n)
+		}
 	}
 
 	if p.Sauce.Retries > 0 {
