@@ -12,8 +12,9 @@ saucectl authoring [-r|--region <us-west-1|us-east-4|eu-central-1>]
 ```
 
 Aliases per subgroup are given below. The root pre-run resolves region, then credentials, then verifies
-the organisation entitlement — failing closed and distinguishing "not in your plan" from "could not be
-verified" (FR-032). The check is skipped for help and completion paths.
+the organisation entitlement, distinguishing "not in your plan" from "could not be verified" (FR-032).
+A definitive "not in your plan" stops the command; a lookup that cannot be completed warns and continues,
+since the service enforces the entitlement on every request anyway. Failing to resolve the user is fatal. The check is skipped for help and completion paths.
 
 **Naming rules this contract follows**, so that Constitution VI holds:
 

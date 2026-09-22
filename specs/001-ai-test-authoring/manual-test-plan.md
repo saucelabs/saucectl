@@ -1507,6 +1507,22 @@ Run each if you have the environment; otherwise record **not run** with the reas
 - Both: `Error: AI Test Authoring is not included in your Sauce Labs plan; contact your Sauce Labs account team to enable it`;
   no mention of credentials; exit 1.
 
+### 13.1a Entitlements API unreachable does not block
+
+The counterpart to 13.1: a definitive "not entitled" stops the command, but a lookup that cannot be
+completed must not. Needs a way to break only the entitlements call — a proxy or hosts entry that fails
+`/v2/entitlements/…` while leaving `/team-management/v1/users/me` and the authoring API reachable.
+
+**Steps**
+1. With that in place: `a testcases list --limit 1`
+2. `./saucectl run --disable-usage-metrics -c $W/cfg.yml --dry-run`
+
+**Expected**
+- A `WRN Could not check the AI Test Authoring entitlement; continuing. …` line, then the command runs
+  normally; exit 0. It must **not** fail with "could not verify".
+- Record **not run** if the entitlements endpoint cannot be isolated; the unit tests in
+  `internal/authoring/entitlement_test.go` cover the same branch.
+
 ### 13.2 Sauce Connect tunnel
 
 **Steps**

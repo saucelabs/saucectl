@@ -176,8 +176,15 @@ the *consequence* of an empty stored tunnel name was verified on 2026-09-05: the
 
 ## R-009: An organisation entitlement gates the feature, and is absent from the specification
 
-**Decision**: Check the entitlement in the command group's pre-run hook, fail closed, and distinguish
-"not included in your plan" from "could not be verified".
+**Decision**: Check the entitlement in the command group's pre-run hook and distinguish "not included in
+your plan" from "could not be verified".
+
+Resolving the user is fatal when it fails, because its identity is reused — `schedules create` sends it as
+`runningUserId`, so continuing with a zero value would write bad data. The entitlement lookup itself is
+**advisory**: a definitive "not entitled" is fatal, but a lookup that cannot be completed warns and
+continues. Sauce Labs enforces the entitlement on every request, so failing closed there would let an
+outage of the entitlements API block every authoring command — CI pipelines included — for a verdict the
+service delivers anyway. (Originally specified as fail-closed throughout; narrowed after review.)
 
 **Observed**: A different platform API on the same host answers this:
 
@@ -195,8 +202,9 @@ feature, and the user cannot tell an entitlement problem from a credentials prob
 
 **Cost, and the accepted trade-off**: This adds **two serial round-trips to every invocation**. Three
 options were weighed: check eagerly (chosen — simplest, best error, ~2 extra requests); check lazily only
-after a 401/403 (no happy-path cost, but the gate stops being fail-closed and error handling spreads
-across every command); or cache locally (fastest, but a stale "no" is worse than two requests). The check
+after a 401/403 (no happy-path cost, but error handling spreads across every command); or cache locally
+(fastest, but a stale "no" is worse than two requests). Note the eager check is no longer fail-closed on
+an unreachable entitlements API — see the Decision above. The check
 is skipped for `--help` and completion paths. Revisit if the latency is felt in practice.
 
 **Alternatives considered**: No entitlement check at all — rejected; it produces an unactionable error for

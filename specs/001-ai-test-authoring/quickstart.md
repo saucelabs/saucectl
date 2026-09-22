@@ -35,8 +35,9 @@ here — this change deliberately makes that diff non-empty.
 
 Run any command against an entitled organisation and confirm it proceeds. Then point the check at an
 organisation identifier that lacks the feature and confirm the message says the capability is not in the
-plan — clearly distinct from a credentials failure. Finally, confirm `--help` works without the check
-running, so help is never gated behind two network round-trips.
+plan — clearly distinct from a credentials failure. Confirm too that a failure to *reach* the entitlements
+API warns and lets the command proceed, rather than blocking it. Finally, confirm `--help` works without
+the check running, so help is never gated behind two network round-trips.
 
 ## 2. Read-only surface (User Story 2, FR-014–018)
 

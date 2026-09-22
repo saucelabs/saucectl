@@ -235,7 +235,9 @@ path.
 **Cross-cutting**
 
 - **FR-032**: The system MUST verify that the organisation is entitled to this capability before acting,
-  and MUST distinguish "not included in your plan" from "could not be verified".
+  and MUST distinguish "not included in your plan" from "could not be verified". A definitive "not
+  included" MUST stop the command. A verification that cannot be completed MUST warn and continue rather
+  than block, because the service enforces the entitlement on every request regardless.
 - **FR-033**: The system MUST work against every data centre where the capability is offered.
 - **FR-034**: Every listing MUST offer both a human-readable and a machine-readable form, consistent with
   the tool's existing commands.
