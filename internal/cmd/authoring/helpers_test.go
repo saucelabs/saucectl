@@ -367,11 +367,18 @@ func TestVerifyEntitlement(t *testing.T) {
 		}
 	})
 
-	t.Run("could not verify is distinct", func(t *testing.T) {
+	// A lookup that cannot be completed is advisory: the service enforces the
+	// entitlement on every request, so an entitlements outage must not block
+	// authoring commands. The resolved identity still comes back, because
+	// callers write it to schedules as runningUserId.
+	t.Run("lookup failure is advisory", func(t *testing.T) {
 		ents := &mocks.AuthoringService{IsAIAuthoringEnabledFn: func(context.Context, string) (bool, error) { return false, errors.New("503") }}
-		_, err := authoring.VerifyEntitlement(context.Background(), users, ents)
-		if err == nil || errors.Is(err, authoring.ErrNotEntitled) || !strings.Contains(err.Error(), "could not verify") {
-			t.Errorf("got %v", err)
+		u, err := authoring.VerifyEntitlement(context.Background(), users, ents)
+		if err != nil {
+			t.Errorf("got %v, want nil", err)
+		}
+		if u.ID != "u" {
+			t.Errorf("identity lost: got %+v", u)
 		}
 	})
 
