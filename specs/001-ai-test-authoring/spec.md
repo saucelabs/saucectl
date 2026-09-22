@@ -302,10 +302,15 @@ path.
   concepts — flag names, output choices and result formatting match what they already know.
 - **SC-011**: Concurrent execution honours the configured limit, so a run cannot exhaust the
   organisation's capacity unintentionally. The limit counts Sauce jobs rather than runs, because one
-  run starts one job per target. One exception, deliberate: a single test case whose target count
-  exceeds the limit runs on its own but still starts every one of its jobs, so the ceiling is
-  exceeded for the duration of that case. Capping its weight at the limit is what lets it run at
-  all — a case needing more slots than exist could otherwise never acquire them.
+  run starts one job per target.
+
+  **Known limitation.** A test case whose target count exceeds the limit runs on its own but still
+  starts every one of its jobs, so the ceiling is exceeded for that case's duration. Every other kind
+  avoids this by queueing one unit per job — `saucecloud` espresso enumerates each device into its own
+  `job.StartOptions` and feeds a pool of `ccy` workers — and this runner should do the same. It cannot
+  yet: splitting the dispatch means sending targets one at a time, and an explicit target overwrites
+  the test case's stored run targets, so a split would rewrite shared organisation data. Until that is
+  resolved the configuration is validated with a warning rather than silently exceeding the limit.
 - **SC-012**: No shared asset can be removed without either an explicit confirmation or an explicit
   bypass — verified across all four asset types, interactively and non-interactively.
 

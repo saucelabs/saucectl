@@ -1176,6 +1176,21 @@ EOF
 - The `Run started` lines are separated by roughly one run's duration (~25 s): the second starts only after
   the first finishes. With `--ccy 3` instead, all three start within a second or two.
 
+### 10.8a Targets exceeding the limit are warned about
+
+**Steps**
+1. Write a config with one suite, one test case and **three** targets, and `sauce.concurrency: 1`.
+2. `./saucectl run --disable-usage-metrics -c <that file> --dry-run`
+
+**Expected**
+- `WRN Suite "<name>" declares 3 targets but sauce.concurrency is 1: each test case starts one job per
+  target, so up to 3 jobs will run at once.`
+- The dry run then proceeds normally; the warning is advisory, not an error.
+- **Known limitation**: running it for real does start 3 jobs at once despite the limit of 1. The
+  runner sends every target in one request and the service fans out, so the ceiling cannot be held
+  without splitting the dispatch — which would overwrite the case's stored run targets. Record the
+  warning as seen; the overshoot is expected until the dispatch is split.
+
 ### 10.9 Async
 
 **Steps**

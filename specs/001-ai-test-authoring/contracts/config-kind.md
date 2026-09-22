@@ -96,7 +96,8 @@ this kind cannot honour — which is why the warnings above must live in `Valida
    exactly what would execute.
 4. Start one run per test case, bounded by `sauce.concurrency`. The bound counts Sauce jobs, not
    runs: a case is weighted by the number of targets it will start. A case weighing more than the
-   whole limit runs alone, and exceeds the limit for its duration.
+   whole limit runs alone and exceeds the limit for its duration — a known limitation, warned about
+   during validation when the targets come from the configuration.
 5. Poll each run to completion, bounded by the suite timeout.
 6. Emit **one result per job** — one per browser or device, not one per suite.
 7. Render through the shared reporters; return `0` only when every result passed.
