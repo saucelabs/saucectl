@@ -534,7 +534,7 @@ real tunnel lookup and refuses. Find one, read-only, without naming anyone's cas
 - Step 3: `n` equals `total` (4 runs so far) and `tcs` is `["<TC>"]`.
 - Step 4: the same total (all runs are yours, today).
 
-### 4.8 Revision path (undeclared service surface)
+### 4.8 Revision path
 
 **Steps**
 1. `a testcases run $TC --revision $REV --build manual-$I`
@@ -542,6 +542,9 @@ real tunnel lookup and refuses. Find one, read-only, without naming anyone's cas
 **Expected**
 - Either accepted like 4.1, or a clear service error with a code. Record which. A hang or a Go stack trace
   would be a defect.
+- The published API documents this: "Starts a test case run. Optionally target a specific revision by
+  appending `/{revisionId}` to the path." It is described in prose under `POST /testcases/{id}/run`
+  rather than listed as its own endpoint, which is why it was first recorded here as undeclared.
 
 ---
 

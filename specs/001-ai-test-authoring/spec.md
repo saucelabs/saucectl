@@ -309,8 +309,12 @@ path.
   avoids this by queueing one unit per job — `saucecloud` espresso enumerates each device into its own
   `job.StartOptions` and feeds a pool of `ccy` workers — and this runner should do the same. It cannot
   yet: splitting the dispatch means sending targets one at a time, and an explicit target overwrites
-  the test case's stored run targets, so a split would rewrite shared organisation data. Until that is
-  resolved the configuration is validated with a warning rather than silently exceeding the limit.
+  the test case's stored run targets, so a split would rewrite shared organisation data — narrowing a
+  case to the last target sent, which schedules and UI runs then inherit as their default. That
+  persistence is **not documented**: the API describes `targets` only as "List of browser/device
+  targets to run the test against". Confirming whether it is intended, or obtaining a run option that
+  does not update stored defaults, is what unblocks the fix. Until then the configuration is validated
+  with a warning rather than silently exceeding the limit.
 - **SC-012**: No shared asset can be removed without either an explicit confirmation or an explicit
   bypass — verified across all four asset types, interactively and non-interactively.
 
