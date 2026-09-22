@@ -262,6 +262,13 @@ func (r *Runner) runCases(ctx context.Context, cases []ResolvedCase) bool {
 			// organisation's capacity (SC-011). Weight each case by the jobs
 			// it will start, capped at the whole budget so a case needing
 			// more than that still runs — alone — rather than never.
+			//
+			// That cap is the one place the ceiling gives: a case weighing
+			// more than the budget holds every slot, runs by itself, and
+			// still starts all of its jobs, so more are in flight than
+			// configured for as long as it lasts. Uncapped it could never
+			// acquire enough slots and would hang for ever, which is worse.
+			// SC-011 records the exception.
 			weight := expectedJobs(c)
 			if weight > ccy {
 				weight = ccy
