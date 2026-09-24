@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/authoring"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/version"
 )
 
 // newTestAuthoringService points a client at the test server with retries
@@ -37,11 +38,12 @@ func writeJSON(w http.ResponseWriter, status int, body string) {
 }
 
 func TestAuthoringService_BasicAuthAndEnvelope(t *testing.T) {
-	var gotPath, gotAuth, gotAccept string
+	var gotPath, gotAuth, gotAccept, gotRequestedBy string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
 		gotAuth = r.Header.Get("Authorization")
 		gotAccept = r.Header.Get("Accept")
+		gotRequestedBy = r.Header.Get("requested-by")
 		writeJSON(w, 200, `{"data":{"id":"6a882c1dc8b4482c166e96c9","name":"test","tags":[],"revisions":[],"runSettings":{"scTunnelName":"","primaryTarget":{"capabilities":{"browserName":"chrome"},"isRdc":false},"runTargets":[]}}}`)
 	}))
 	defer srv.Close()
@@ -61,6 +63,9 @@ func TestAuthoringService_BasicAuthAndEnvelope(t *testing.T) {
 	}
 	if gotAccept != "application/json" {
 		t.Errorf("Accept = %q", gotAccept)
+	}
+	if want := "saucectl/" + version.Version; gotRequestedBy != want {
+		t.Errorf("requested-by = %q, want %q", gotRequestedBy, want)
 	}
 	if tc.Name != "test" {
 		t.Errorf("envelope not unwrapped: %+v", tc)
@@ -422,9 +427,10 @@ func TestAuthoringService_IsAIAuthoringEnabled(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var gotPath, gotQuery string
+			var gotPath, gotQuery, gotRequestedBy string
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				gotPath, gotQuery = r.URL.Path, r.URL.RawQuery
+				gotRequestedBy = r.Header.Get("requested-by")
 				writeJSON(w, tt.status, tt.body)
 			}))
 			defer srv.Close()
@@ -440,6 +446,9 @@ func TestAuthoringService_IsAIAuthoringEnabled(t *testing.T) {
 			}
 			if gotPath != "/v2/entitlements/entities/org/org-1" || gotQuery != "entitlements=ai_authoring.enabled" {
 				t.Errorf("request = %s?%s; the entitlement API is not under the authoring base path", gotPath, gotQuery)
+			}
+			if want := "saucectl/" + version.Version; gotRequestedBy != want {
+				t.Errorf("requested-by = %q, want %q", gotRequestedBy, want)
 			}
 		})
 	}

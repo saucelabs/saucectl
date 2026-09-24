@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/authoring"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/version"
 )
 
 // authoringBasePath is the AI Authoring API's prefix on the region's API host.
@@ -121,8 +122,15 @@ func (c *AuthoringService) newRequest(ctx context.Context, method, path string, 
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
+	setRequestedBy(req.Header)
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	return req, nil
+}
+
+// setRequestedBy identifies saucectl to the AI Authoring backend, which
+// attributes requests by the requested-by header.
+func setRequestedBy(h http.Header) {
+	h.Set("requested-by", "saucectl/"+version.Version)
 }
 
 // do sends the request with the given client and returns the response, or a
@@ -608,6 +616,7 @@ func (c *AuthoringService) IsAIAuthoringEnabled(ctx context.Context, orgID strin
 		return false, err
 	}
 	req.Header.Set("Accept", "application/json")
+	setRequestedBy(req.Header)
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := c.Client.Do(req)
