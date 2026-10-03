@@ -30,3 +30,5 @@ node_modules/
 # dry-run bundles
 /sauce-app-payload-*
 .idea
+
+settings.local.json
