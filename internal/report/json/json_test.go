@@ -102,7 +102,7 @@ func TestReporter_RenderNoAttempts(t *testing.T) {
 
 func TestReporter_RenderWebhookSetsHeaders(t *testing.T) {
 	var gotUA, gotCT string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
 		gotCT = r.Header.Get("Content-Type")
 	}))
