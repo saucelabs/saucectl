@@ -2,12 +2,14 @@ package json
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"os"
 
 	"github.com/rs/zerolog/log"
+	saucehttp "github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -32,7 +34,7 @@ func (r *Reporter) Render() {
 	}
 
 	if r.WebhookURL != "" {
-		resp, err := http.Post(r.WebhookURL, "application/json", bytes.NewBuffer(body))
+		resp, err := r.postWebhook(body)
 		if err != nil {
 			log.Err(err).Str("webhook", r.WebhookURL).Msg("failed to send test result to webhook.")
 		} else {
@@ -52,6 +54,16 @@ func (r *Reporter) Render() {
 			log.Err(err).Msgf("failed to write test result to %q.", r.Filename)
 		}
 	}
+}
+
+func (r *Reporter) postWebhook(body []byte) (*http.Response, error) {
+	req, err := saucehttp.NewRequestWithContext(context.Background(), http.MethodPost, r.WebhookURL, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	return http.DefaultClient.Do(req)
 }
 
 // Reset resets the reporter to its initial state. This action will delete all test results.

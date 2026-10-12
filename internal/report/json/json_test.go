@@ -2,6 +2,8 @@ package json
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -95,5 +97,24 @@ func TestReporter_RenderNoAttempts(t *testing.T) {
 	raw := string(data)
 	if strings.Contains(raw, `"attempts"`) {
 		t.Errorf("Expected no 'attempts' key in JSON when Attempts is empty, got:\n%s", raw)
+	}
+}
+
+func TestReporter_RenderWebhookSetsHeaders(t *testing.T) {
+	var gotUA, gotCT string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUA = r.Header.Get("User-Agent")
+		gotCT = r.Header.Get("Content-Type")
+	}))
+	defer server.Close()
+
+	r := Reporter{WebhookURL: server.URL}
+	r.Render()
+
+	if want := "saucectl/0.0.0+unknown"; gotUA != want {
+		t.Errorf("User-Agent: want %q, got %q", want, gotUA)
+	}
+	if want := "application/json"; gotCT != want {
+		t.Errorf("Content-Type: want %q, got %q", want, gotCT)
 	}
 }

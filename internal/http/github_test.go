@@ -95,3 +95,20 @@ func TestGitHub_IsUpdateAvailable(t *testing.T) {
 		ts.Close()
 	}
 }
+
+func TestGitHub_IsUpdateAvailable_SetsUserAgent(t *testing.T) {
+	var got string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("User-Agent")
+		_, _ = w.Write([]byte(`{"tag_name": "v0.43.0"}`))
+	}))
+	defer server.Close()
+
+	gh := GitHub{HTTPClient: server.Client(), URL: server.URL}
+	if _, err := gh.IsUpdateAvailable("v0.1.0"); err != nil {
+		t.Fatal(err)
+	}
+	if want := "saucectl/0.0.0+unknown"; got != want {
+		t.Errorf("User-Agent: want %q, got %q", want, got)
+	}
+}
