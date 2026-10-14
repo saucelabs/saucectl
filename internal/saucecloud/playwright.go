@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -126,9 +127,26 @@ func (r *PlaywrightRunner) validateFramework(ctx context.Context, m framework.Me
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
 			return errors.New("unsupported platform")
 		}
-		r.Project.Suites[i].Params.BrowserVersion = m.BrowserDefaults[PlaywrightBrowserMap[s.Params.BrowserName]]
+		browserKey := PlaywrightBrowserMap[s.Params.BrowserName]
+		r.Project.Suites[i].Params.BrowserVersion = r.resolveBrowserVersion(m, s.PlatformName, browserKey)
 	}
 	return nil
+}
+
+// resolveBrowserVersion returns the browser version for a given platform and browser key.
+// It checks per-platform browserDefaults first, then falls back to the top-level defaults.
+func (r *PlaywrightRunner) resolveBrowserVersion(m framework.Metadata, platformName, browserKey string) string {
+	if platformName != "" {
+		for _, p := range m.Platforms {
+			if strings.EqualFold(p.PlatformName, platformName) && p.BrowserDefaults != nil {
+				if v, ok := p.BrowserDefaults[browserKey]; ok {
+					return v
+				}
+				break
+			}
+		}
+	}
+	return m.BrowserDefaults[browserKey]
 }
 
 func (r *PlaywrightRunner) getSuiteNames() []string {
