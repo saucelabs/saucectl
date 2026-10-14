@@ -419,3 +419,37 @@ func TestAppStore_Delete(t *testing.T) {
 		})
 	}
 }
+
+func TestAppStore_SetsUserAgent(t *testing.T) {
+	var got []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.Header.Get("User-Agent"))
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"item": {}}`))
+		case http.MethodGet:
+			if r.URL.Path == "/v1/storage/files" {
+				_, _ = w.Write([]byte(`{"items": []}`))
+			}
+		}
+	}))
+	defer server.Close()
+
+	s := NewAppStore(server.URL, "user", "key", 5*time.Second)
+	ctx := context.Background()
+
+	_, _, err := s.Download(ctx, "id")
+	assert.NoError(t, err)
+	_, _, err = s.DownloadURL(ctx, server.URL+"/some/file")
+	assert.NoError(t, err)
+	_, err = s.UploadStream(ctx, storage.FileInfo{Name: "app.apk"}, strings.NewReader("data"))
+	assert.NoError(t, err)
+	_, err = s.List(ctx, storage.ListOptions{})
+	assert.NoError(t, err)
+	assert.NoError(t, s.Delete(ctx, "id"))
+
+	assert.Len(t, got, 5)
+	for _, ua := range got {
+		assert.Equal(t, "saucectl/0.0.0+unknown", ua)
+	}
+}

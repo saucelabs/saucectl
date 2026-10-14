@@ -66,7 +66,7 @@ func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppSto
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
 func (s *AppStore) Download(ctx context.Context, id string) (io.ReadCloser, int64, error) {
-	req, err := retryablehttp.NewRequestWithContext(
+	req, err := NewRetryableRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id),
@@ -99,7 +99,7 @@ func (s *AppStore) Download(ctx context.Context, id string) (io.ReadCloser, int6
 
 // DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
 func (s *AppStore) DownloadURL(ctx context.Context, url string) (io.ReadCloser, int64, error) {
-	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -125,7 +125,7 @@ func (s *AppStore) UploadStream(ctx context.Context, fileInfo storage.FileInfo, 
 		return storage.Item{}, err
 	}
 
-	req, err := retryablehttp.NewRequestWithContext(
+	req, err := NewRetryableRequestWithContext(
 		ctx,
 		http.MethodPost,
 		fmt.Sprintf("%s/v1/storage/upload", s.URL),
@@ -195,7 +195,7 @@ func (s *AppStore) List(ctx context.Context, opts storage.ListOptions) (storage.
 
 	uri.RawQuery = query.Encode()
 
-	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return storage.List{}, err
 	}
@@ -242,7 +242,7 @@ func (s *AppStore) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("no id specified")
 	}
 
-	req, err := retryablehttp.NewRequestWithContext(
+	req, err := NewRetryableRequestWithContext(
 		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("%s/v1/storage/files/%s", s.URL, id),

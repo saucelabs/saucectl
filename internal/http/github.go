@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,7 +28,7 @@ type GitHub struct {
 
 // IsUpdateAvailable returns the latest version if it's semantically higher than the given one.
 func (c *GitHub) IsUpdateAvailable(version string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
+	req, err := NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
 	if err != nil {
 		return "", err
 	}
