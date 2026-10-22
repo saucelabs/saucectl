@@ -17,7 +17,7 @@ func TestCasesDeleteCommand() *cobra.Command {
 		Use:          "delete <id>",
 		Aliases:      []string{"rm"},
 		Short:        "Delete a test case",
-		Example:      `  saucectl authoring testcases delete 6a882c1dc8b4482c166e96c9 --yes`,
+		Example:      `  saucectl authoring testcases delete <test-case-id> --yes`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

@@ -38,7 +38,7 @@ none of them, an interactive session prompts (masked for --secret) and a non-int
 one fails. A secret's value is stored separately and never returned by any command.`,
 		Example: `  saucectl authoring variables create --scope org --name password --secret --value-from-env SAUCE_DEMO_PASSWORD
   echo -n "standard_user" | saucectl authoring variables create --scope team --name username --value-from-file -
-  saucectl authoring variables create --scope testCase --test-case-id 6a88… --name coupon --value SAVE10`,
+  saucectl authoring variables create --scope testCase --test-case-id <test-case-id> --name coupon --value SAVE10`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			trackUsage(cmd)

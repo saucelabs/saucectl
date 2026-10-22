@@ -58,8 +58,8 @@ func SchedulesCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a test schedule",
 		Example: `  saucectl authoring schedules create --name "Nightly" --cron "0 0 2 * * *" --timezone Europe/Berlin \
-      --test-suite-id 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b --build nightly
-  saucectl authoring schedules create --name "Smoke" --cron "0 */30 * * * *" --timezone America/New_York --test-suite-id 3f2a… --max-runs 10 --state disabled`,
+      --test-suite-id <test-suite-id> --build nightly
+  saucectl authoring schedules create --name "Smoke" --cron "0 */30 * * * *" --timezone America/New_York --test-suite-id <test-suite-id> --max-runs 10 --state disabled`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			trackUsage(cmd)

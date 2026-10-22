@@ -84,7 +84,7 @@ func TestSuitesGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "get <id>",
 		Short:        "Show a test suite",
-		Example:      `  saucectl authoring testsuites get 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b`,
+		Example:      `  saucectl authoring testsuites get <test-suite-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

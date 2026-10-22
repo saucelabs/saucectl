@@ -27,7 +27,7 @@ func DownloadArtifactCommand() *cobra.Command {
 The identifier is the last path segment of a step's screenshot URL, as shown by
 'testcases get --show-steps'. A full screenshot URL is also accepted. The download
 carries no content type, so the destination filename is required.`,
-		Example:      `  saucectl authoring download-artifact 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b -f step-3.png`,
+		Example:      `  saucectl authoring download-artifact <artifact-id> -f step-3.png`,
 		SilenceUsage: true,
 		Args:         requireArgs("artifact-id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

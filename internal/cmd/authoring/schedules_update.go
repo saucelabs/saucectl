@@ -51,9 +51,9 @@ mention.
 --unset clears an optional setting explicitly: tunnelName, buildName, startDate, endDate or
 maxRuns. --test-suite-id replaces the suites wholesale; --add-test-suite-id and
 --remove-test-suite-id change them incrementally.`,
-		Example: `  saucectl authoring schedules update 9c1d… --cron "0 0 3 * * *"
-  saucectl authoring schedules update 9c1d… --add-test-suite-id 3f2a… --unset maxRuns
-  saucectl authoring schedules update 9c1d… --unset tunnelName`,
+		Example: `  saucectl authoring schedules update <schedule-id> --cron "0 0 3 * * *"
+  saucectl authoring schedules update <schedule-id> --add-test-suite-id <test-suite-id> --unset maxRuns
+  saucectl authoring schedules update <schedule-id> --unset tunnelName`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

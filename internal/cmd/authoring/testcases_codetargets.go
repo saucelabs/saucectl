@@ -14,7 +14,7 @@ func TestCasesListCodeTargetsCommand() *cobra.Command {
 		Use:          "list-code-targets <id>",
 		Aliases:      []string{"code-targets"},
 		Short:        "List the languages and frameworks a test case can be exported to",
-		Example:      `  saucectl authoring testcases list-code-targets 6a882c1dc8b4482c166e96c9`,
+		Example:      `  saucectl authoring testcases list-code-targets <test-case-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

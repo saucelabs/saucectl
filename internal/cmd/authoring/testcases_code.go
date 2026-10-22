@@ -41,9 +41,9 @@ interactive session prompts for one. By default the source is printed to standar
 so it can be redirected; -f writes to a file and -d writes into a directory with a
 filename derived from the target's language. Existing files are never overwritten
 without --force.`,
-		Example: `  saucectl authoring testcases code 6a882c1dc8b4482c166e96c9 --target typescript_playwright > login.spec.ts
-  saucectl authoring testcases code 6a882c1dc8b4482c166e96c9 --target python_selenium -d tests/
-  saucectl authoring testcases code 6a882c1dc8b4482c166e96c9 --target java_selenium -f LoginTest.java --force`,
+		Example: `  saucectl authoring testcases code <test-case-id> --target typescript_playwright > login.spec.ts
+  saucectl authoring testcases code <test-case-id> --target python_selenium -d tests/
+  saucectl authoring testcases code <test-case-id> --target java_selenium -f LoginTest.java --force`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

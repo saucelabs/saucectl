@@ -19,8 +19,8 @@ func TestSuitesDeleteCommand() *cobra.Command {
 		Short:   "Delete a test suite",
 		Long: `Delete a test suite. Its test cases are kept and become unassigned unless
 --delete-test-cases is given, in which case every test case in the suite is deleted too.`,
-		Example: `  saucectl authoring testsuites delete 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b
-  saucectl authoring testsuites delete 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b --delete-test-cases --yes`,
+		Example: `  saucectl authoring testsuites delete <test-suite-id>
+  saucectl authoring testsuites delete <test-suite-id> --delete-test-cases --yes`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
@@ -93,7 +93,7 @@ func TestSuitesRunCommand() *cobra.Command {
 		Long: `Queue a run of every test case in the suite. The service reports only how many runs were
 queued; it returns no run identifiers, so results cannot be followed from here. To wait
 for results and gate a pipeline, use 'saucectl run' with a 'kind: authoring' configuration.`,
-		Example:      `  saucectl authoring testsuites run 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b --build nightly`,
+		Example:      `  saucectl authoring testsuites run <test-suite-id> --build nightly`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
