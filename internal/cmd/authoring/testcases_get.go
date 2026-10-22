@@ -20,9 +20,9 @@ func TestCasesGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <id>",
 		Short: "Show a test case, optionally with its recorded steps",
-		Example: `  saucectl authoring testcases get 6a882c1dc8b4482c166e96c9
-  saucectl authoring testcases get 6a882c1dc8b4482c166e96c9 --show-steps
-  saucectl authoring testcases get 6a882c1dc8b4482c166e96c9 -o json | jq '.revisions[-1].steps'`,
+		Example: `  saucectl authoring testcases get <test-case-id>
+  saucectl authoring testcases get <test-case-id> --show-steps
+  saucectl authoring testcases get <test-case-id> -o json | jq '.revisions[-1].steps'`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

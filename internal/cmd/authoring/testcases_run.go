@@ -29,9 +29,9 @@ use 'saucectl run' with a 'kind: authoring' configuration instead.
 
 Without --tunnel-name the run is started with no tunnel, which also clears any tunnel
 name stored on the test case.`,
-		Example: `  saucectl authoring testcases run 6a882c1dc8b4482c166e96c9 --build nightly
-  saucectl authoring testcases run 6a882c1dc8b4482c166e96c9 --target browserName=firefox,platformName="Windows 11"
-  saucectl authoring testcases run 6a882c1dc8b4482c166e96c9 --target-json @pixel9.json --tunnel-name my-tunnel`,
+		Example: `  saucectl authoring testcases run <test-case-id> --build nightly
+  saucectl authoring testcases run <test-case-id> --target browserName=firefox,platformName="Windows 11"
+  saucectl authoring testcases run <test-case-id> --target-json @pixel9.json --tunnel-name my-tunnel`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

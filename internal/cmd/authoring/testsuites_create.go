@@ -18,7 +18,7 @@ func TestSuitesCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a test suite",
 		Example: `  saucectl authoring testsuites create --name "Checkout Regression" --tag smoke \
-      --test-case 6a882c1dc8b4482c166e96c9 --test-case 6a6b903c0405fb400076b2ba`,
+      --test-case <test-case-id> --test-case <test-case-id>`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			trackUsage(cmd)

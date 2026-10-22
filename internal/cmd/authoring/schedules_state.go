@@ -28,7 +28,7 @@ func scheduleStateCommand(use, short string, state authoring.ScheduleStateName) 
 	cmd := &cobra.Command{
 		Use:          use + " <id>",
 		Short:        short,
-		Example:      fmt.Sprintf("  saucectl authoring schedules %s 9c1d…", use),
+		Example:      fmt.Sprintf("  saucectl authoring schedules %s <schedule-id>", use),
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
@@ -73,7 +73,7 @@ func SchedulesDeleteCommand() *cobra.Command {
 		Use:          "delete <id>",
 		Aliases:      []string{"rm"},
 		Short:        "Delete a test schedule",
-		Example:      `  saucectl authoring schedules delete 9c1d… --yes`,
+		Example:      `  saucectl authoring schedules delete <schedule-id> --yes`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

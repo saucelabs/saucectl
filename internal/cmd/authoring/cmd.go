@@ -63,8 +63,8 @@ variables — and author new tests from a plain-language description.
 To run authored suites as part of a pipeline, with reporters, artifact download and CI
 exit codes, use 'saucectl run' with a 'kind: authoring' configuration instead.`,
 		Example: `  saucectl authoring testcases list --tag smoke
-  saucectl authoring testcases get 6a882c1dc8b4482c166e96c9 --show-steps
-  saucectl authoring testsuites create --name "Checkout" --test-case 6a882c1dc8b4482c166e96c9
+  saucectl authoring testcases get <test-case-id> --show-steps
+  saucectl authoring testsuites create --name "Checkout" --test-case <test-case-id>
   saucectl authoring variables create --scope org --name password --secret --value-from-env PASSWORD`,
 		SilenceUsage:     true,
 		TraverseChildren: true,

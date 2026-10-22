@@ -35,9 +35,9 @@ its current version is sent along, so a colleague's change made in between is de
 and refused rather than overwritten. Pass --expected-last-update to pin a version you
 read earlier instead. There is deliberately no --force: re-reading and re-sending is
 already the default.`,
-		Example: `  saucectl authoring variables update 5e7a… --value-from-env NEW_PASSWORD
-  saucectl authoring variables update 5e7a… --secret=true
-  saucectl authoring variables update 5e7a… --description "Rotated 2026-09" --expected-last-update 2026-09-05T14:59:59.000Z`,
+		Example: `  saucectl authoring variables update <variable-id> --value-from-env NEW_PASSWORD
+  saucectl authoring variables update <variable-id> --secret=true
+  saucectl authoring variables update <variable-id> --description "Rotated 2026-09" --expected-last-update 2026-09-05T14:59:59.000Z`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

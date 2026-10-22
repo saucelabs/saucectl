@@ -20,8 +20,8 @@ func TestCasesGenerateStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate-status <task-id>",
 		Short: "Show the status of an authoring task, or reattach and wait for it",
-		Example: `  saucectl authoring testcases generate-status 8b1f… 
-  saucectl authoring testcases generate-status 8b1f… --wait`,
+		Example: `  saucectl authoring testcases generate-status <task-id>
+  saucectl authoring testcases generate-status <task-id> --wait`,
 		SilenceUsage: true,
 		Args:         requireArgs("task-id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

@@ -19,8 +19,8 @@ func VariablesDeleteCommand() *cobra.Command {
 		Use:     "delete <id>",
 		Aliases: []string{"rm"},
 		Short:   "Delete a variable",
-		Example: `  saucectl authoring variables delete 5e7a…
-  saucectl authoring variables delete 5e7a… --yes --expected-last-update 2026-09-05T14:59:59.000Z`,
+		Example: `  saucectl authoring variables delete <variable-id>
+  saucectl authoring variables delete <variable-id> --yes --expected-last-update 2026-09-05T14:59:59.000Z`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
