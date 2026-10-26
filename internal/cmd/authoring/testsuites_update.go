@@ -19,9 +19,9 @@ func TestSuitesUpdateCommand() *cobra.Command {
 		Long: `Update a test suite. --test-case replaces the membership wholesale; --add-test-case and
 --remove-test-case change it incrementally without restating the rest. The two forms
 cannot be combined. At least one change is required.`,
-		Example: `  saucectl authoring testsuites update 3f2a… --name "Checkout Regression v2"
-  saucectl authoring testsuites update 3f2a… --add-test-case 6a882c1dc8b4482c166e96c9
-  saucectl authoring testsuites update 3f2a… --remove-test-case 6a6b903c0405fb400076b2ba`,
+		Example: `  saucectl authoring testsuites update <test-suite-id> --name "Checkout Regression v2"
+  saucectl authoring testsuites update <test-suite-id> --add-test-case <test-case-id>
+  saucectl authoring testsuites update <test-suite-id> --remove-test-case <test-case-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

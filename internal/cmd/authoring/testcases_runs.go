@@ -20,8 +20,8 @@ func TestCasesListRunsCommand() *cobra.Command {
 		Use:     "list-runs <id>",
 		Aliases: []string{"runs"},
 		Short:   "List the runs of a test case",
-		Example: `  saucectl authoring testcases list-runs 6a882c1dc8b4482c166e96c9
-  saucectl authoring testcases list-runs 6a882c1dc8b4482c166e96c9 --all -o json | jq -r '[.items[].testCaseId] | unique'`,
+		Example: `  saucectl authoring testcases list-runs <test-case-id>
+  saucectl authoring testcases list-runs <test-case-id> --all -o json | jq -r '[.items[].testCaseId] | unique'`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
@@ -87,7 +87,7 @@ func TestCasesGetRunCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "get-run <id> <run-id>",
 		Short:        "Show a single run with its jobs",
-		Example:      `  saucectl authoring testcases get-run 6a882c1dc8b4482c166e96c9 ed320d67-5f56-4e81-b61d-72e325661c77`,
+		Example:      `  saucectl authoring testcases get-run <test-case-id> <run-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id", "run-id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

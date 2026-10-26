@@ -13,7 +13,7 @@ func TestCasesRenameCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "rename <id> <name>",
 		Short:        "Rename a test case",
-		Example:      `  saucectl authoring testcases rename 6a882c1dc8b4482c166e96c9 "Checkout - add two items"`,
+		Example:      `  saucectl authoring testcases rename <test-case-id> "Checkout - add two items"`,
 		SilenceUsage: true,
 		Args:         requireArgs("id", "name"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

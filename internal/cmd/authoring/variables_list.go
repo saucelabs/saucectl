@@ -25,7 +25,7 @@ func VariablesListCommand() *cobra.Command {
 		Aliases: []string{"ls"},
 		Short:   "List variables",
 		Example: `  saucectl authoring variables list --scope org
-  saucectl authoring variables list --scope testSuite --test-suite-id 3f2a…
+  saucectl authoring variables list --scope testSuite --test-suite-id <test-suite-id>
   saucectl authoring variables list --search pass -o json`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
@@ -138,7 +138,7 @@ func VariablesGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "get <id>",
 		Short:        "Show a variable",
-		Example:      `  saucectl authoring variables get 5e7a…`,
+		Example:      `  saucectl authoring variables get <variable-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {

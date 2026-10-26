@@ -22,7 +22,7 @@ func TestCasesListCommand() *cobra.Command {
 		Short:   "List test cases",
 		Example: `  saucectl authoring testcases list
   saucectl authoring testcases list --search checkout --tag smoke
-  saucectl authoring testcases list --test-suite-id 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b -o json
+  saucectl authoring testcases list --test-suite-id <test-suite-id> -o json
   saucectl authoring testcases list --limit 0        # total count only`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {

@@ -22,7 +22,7 @@ func SchedulesListCommand() *cobra.Command {
 		Aliases: []string{"ls"},
 		Short:   "List test schedules",
 		Example: `  saucectl authoring schedules list
-  saucectl authoring schedules list --test-suite-id 3f2a9c1e4b5d6e7f8a9b0c1d2e3f4a5b`,
+  saucectl authoring schedules list --test-suite-id <test-suite-id>`,
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			trackUsage(cmd)
@@ -86,7 +86,7 @@ func SchedulesGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "get <id>",
 		Short:        "Show a test schedule",
-		Example:      `  saucectl authoring schedules get 9c1d…`,
+		Example:      `  saucectl authoring schedules get <schedule-id>`,
 		SilenceUsage: true,
 		Args:         requireArgs("id"),
 		PreRun: func(cmd *cobra.Command, _ []string) {
