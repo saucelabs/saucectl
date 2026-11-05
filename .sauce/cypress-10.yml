@@ -34,7 +34,6 @@ suites:
 
   - name: "firefox test"
     browser: "firefox"
-    browserVersion: "104" # FF 105 does not work with cypress
     platformName: "macOS 12"
     config:
       env:
