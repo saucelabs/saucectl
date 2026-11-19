@@ -403,6 +403,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "16.2.1",
                   "16.1.1",
                   "15.21.1",
                   "15.20.0",
@@ -1598,6 +1599,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "1.64.1",
                   "1.63.0",
                   "1.62.1",
                   "1.61.1",
@@ -2471,6 +2473,7 @@
                 "description": "Which framework version to use.",
                 "enum": [
                   "package.json",
+                  "3.7.7",
                   "3.7.6",
                   "3.7.4",
                   "3.7.3"
